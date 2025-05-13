@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEM/TIFF 单通道图像编辑器 (Web)</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- geotiff.js from CDN -->
+    <script src="https://unpkg.com/geotiff@2.1.1/dist-browser/geotiff.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="menu-bar">
+            <div class="menu-item">
+                文件
+                <div class="dropdown-content">
+                    <label for="fileInput" class="dropdown-button">打开...</label>
+                    <input type="file" id="fileInput" accept=".tif,.tiff" style="display: none;">
+                    <button id="saveButton">保存</button>
+                    <button id="saveAsButton">另存为...</button>
+                </div>
+            </div>
+            <div class="menu-item">
+                编辑
+                <div class="dropdown-content">
+                    <button id="undoButton">撤销 (Ctrl+Z)</button>
+                    <button id="redoButton">重做 (Ctrl+Y)</button>
+                    <hr>
+                    <button id="locateMaxButton">定位最大值</button>
+                    <button id="locateMinButton">定位最小值</button>
+                    <button id="locateNaNButton">查找NaN值</button>
+                    <hr>
+                    <button id="replaceAllNaNButton">替换所有NaN值...</button>
+                </div>
+            </div>
+            <div class="menu-item">
+                视图
+                <div class="dropdown-content">
+                    <button id="zoomInButton">放大</button>
+                    <button id="zoomOutButton">缩小</button>
+                    <button id="zoomActualButton">实际大小</button>
+                    <hr>
+                    <label for="colormapSelect">颜色映射:</label>
+                    <select id="colormapSelect">
+                        <option value="viridis">viridis</option>
+                        <option value="plasma">plasma</option>
+                        <option value="inferno">inferno</option>
+                        <option value="magma">magma</option>
+                        <option value="cividis">cividis</option>
+                        <option value="terrain">terrain (approx.)</option>
+                        <option value="grayscale">grayscale</option>
+                        <!-- Add more colormaps -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <label for="brushSize">画笔大小:</label>
+            <input type="range" id="brushSize" min="1" max="20" value="1">
+            <span id="brushSizeValue">1</span>
+
+            <label for="currentValue">设置值:</label>
+            <input type="number" id="currentValue" step="any" value="0.0">
+            
+            <input type="checkbox" id="setNaNCheckbox">
+            <label for="setNaNCheckbox">设置为NaN</label>
+
+            <label>工具:</label>
+            <input type="radio" id="toolBrush" name="tool" value="brush" checked>
+            <label for="toolBrush">修改值</label>
+            <input type="radio" id="toolPicker" name="tool" value="picker">
+            <label for="toolPicker">取值器</label>
+
+            <input type="checkbox" id="showPixelValuesCheckbox">
+            <label for="showPixelValuesCheckbox">显示像素值</label>
+            
+            <label for="zoomInput">缩放:</label>
+            <input type="number" id="zoomInput" value="100" min="10" max="10000" step="10"> %
+            <button id="zoomApplyButton">应用</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="imageCanvas"></canvas>
+            <!-- Scrollbars might be handled by the container's overflow or custom JS -->
+        </div>
+
+        <div class="info-panel">
+            <span id="coordInfo">坐标: (0, 0)</span>
+            <span id="valueAtCursorInfo">光标处值: 0.0</span>
+            <span id="currentSetValueInfo">当前设置值: 0.0</span>
+            <span id="minInfo">最小值: 0.0</span>
+            <span id="maxInfo">最大值: 0.0</span>
+            <span id="nanInfo">NaN数量: 0</span>
+        </div>
+
+        <div class="status-bar" id="statusBar">就绪</div>
+    </div>
+
+    <!-- Modal for NaN replacement -->
+    <div id="nanReplaceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('nanReplaceModal').style.display='none'">&times;</span>
+            <h3 id="nanReplaceTitle">替换NaN值 (0个)</h3>
+            <div>
+                <input type="radio" id="replaceNanConstantRadio" name="nanReplaceMethod" value="constant" checked>
+                <label for="replaceNanConstantRadio">固定值:</label>
+                <input type="number" id="replaceNanConstantValue" value="0.0" step="any">
+            </div>
+            <div>
+                <input type="radio" id="replaceNanStatisticRadio" name="nanReplaceMethod" value="statistic">
+                <label for="replaceNanStatisticRadio">统计值:</label>
+                <select id="replaceNanStatisticType">
+                    <option value="mean">平均值</option>
+                    <option value="median">中位数</option>
+                    <option value="min">最小值 (非NaN)</option>
+                    <option value="max">最大值 (非NaN)</option>
+                </select>
+            </div>
+             <div>
+                <input type="radio" id="replaceNanInterpolateRadio" name="nanReplaceMethod" value="interpolate">
+                <label for="replaceNanInterpolateRadio">插值 (最近邻 - 简单实现):</label>
+            </div>
+            <button id="confirmNanReplaceButton">确定</button>
+        </div>
+    </div>
+
+    <script src="colormaps.js"></script> <!-- Separate file for colormap functions -->
+    <script src="script.js"></script>
+</body>
+</html>
