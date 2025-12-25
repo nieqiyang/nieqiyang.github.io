@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="pic/nie.ico">
+    <title>Nie Qiyang</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap');
+        /* 应用到 html 确保全屏有效 */
+        html {
+            height: 100%;
+            background-color: #F2F1EA;
+            cursor: url('pic/11.png'), auto;
+        }
+
+        /* 鼠标按下时，html 全局变幻光标 */
+        html:active {
+            cursor: url('pic/22.png'), pointer !important;
+        }            
+        /* 基礎スタイル */
+        body, html {
+            font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", "ヒラギノ角ゴ Pro W3", Arial, sans-serif;
+            font-size: 15px;
+            line-height: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #F2F1EA;
+            overflow-x: hidden;
+        }
+
+        @media screen and (min-width: 768px) {
+            body { width: 768px; margin: 10px auto; }
+        }
+
+        /* 背景 Canvas */
+        #rainCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* レイアウト */
+        #Maii { position: relative; z-index: 10; padding: 20px; }
+        .section-divider { margin: 26px 0 28px; border: 0.8px solid #dddddd; }
+        .flex-container { display: flex; justify-content: space-between; align-items: flex-start; }
+        
+        /* タイポグラフィ */
+        h1, h2 { color: #ae452b; line-height: 30px; }
+        h2 { font-family: "Kosugi Maru", sans-serif; margin: 10px 0; font-size: 22px; }
+        p { margin-bottom: 9px; text-align: justify; }
+        a { color: #C39797; text-decoration: none; }
+        a:hover { color: #8FBC8F; }
+
+        /* ボタン */
+        button {
+            width: 55px; height: 55px; font-size: 10px; font-weight: bold;
+            color: #191c7b; border-radius: 15px; cursor: pointer;
+            border: 2px solid white; transition: all .2s ease-out;
+            box-shadow: 9px 9px 15px rgba(0, 0, 0, 0.2), -9px -9px 15px #F2F1EA;
+        }
+        button:hover {
+            box-shadow: inset 9px 9px 15px rgba(0, 0, 0, 0.1), inset -9px -9px 15px white;
+            filter: brightness(110%);
+        }
+
+        /* コンテンツ */
+        .research-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .research-card { padding: 1rem; background: #f5dbd5; border-radius: 8px; margin: 0; }
+
+        /* 経歴テーブルの調整：paddingを6pxにして行間を詰めました */
+        .history-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+        .history-table th { background-color: #f5dbd5; padding: 8px 12px; text-align: left; }
+        .history-table td { padding: 6px 12px; border-bottom: 1px dashed #e0e0e0; }
+        .history-table tr:hover { background-color: #f5dbd5; }
+
+        .reference-list { display: flex; flex-direction: column; gap: 10px; }
+        .sub-heading { display: flex; align-items: center; margin: 15px 0; }
+        .sub-heading .line { flex-grow: 1; border-top: 2px dashed #808080; }
+        .sub-heading span { margin: 0 8px; font-family: 'Kosugi Maru', sans-serif; }
+
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+
+<body>
+    <canvas id="rainCanvas"></canvas>
+
+    <div id="Maii">
+        <div class="flex-container">
+            <img src="pic/nieqiyang.png" alt="Nie Qiyang" style="width: 200px; height: auto;">
+            <button onclick="window.location.href = 'index_en.html';">English</button>
+        </div>
+
+        <div class="section-divider" style="margin-top: 32px; margin-bottom: 5px;"></div>
+
+        <div class="flex-container">
+            <div>
+                <p>博士後期課程 | 環境エンジニア</p>
+                <p>北海道大学 大学院環境科学院</p>
+                <p>メール : qiyangnie@elms.hokudai.ac.jp</p>
+            </div>
+            <img src="pic/pic2.jpg" style="width: 20% !important;">
+        </div>
+
+        <div class="section-divider" style="margin-top: 5px;"></div>
+
+        <h2>研究内容</h2>
+        <div class="research-grid">
+            <p class="research-card">🌊 水の流れを<br>データに変えて<br>知を紡ぐ</p>
+            <p class="research-card">🤖 人工知能<br>水質予測の<br>道を拓く</p>
+            <p class="research-card">🌍 環境と<br>技術が織りなす<br>未来図を</p>
+            <p class="research-card">🔬 共に描く<br>水資源との<br>調和へと</p>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>経歴</h2></summary>
+            <table class="history-table">
+                <thead>
+                    <tr><th>期間</th><th>機関</th><th>身分・役割</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>2024 - </td><td>北海道大学 大学院</td><td>博士後期課程</td></tr>
+                    <tr><td>2020 - 2023</td><td>上海勘測設計研究院</td><td>環境エンジニア</td></tr>
+                    <tr><td>2017 - 2020</td><td>長安大学 大学院</td><td>修士課程修了</td></tr>
+                    <tr><td>2013 - 2017</td><td>南京林業大学</td><td>学士課程卒業</td></tr>
+                </tbody>
+            </table>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>論文と特許</h2></summary>
+            <div class="reference-list">
+                <span class="reference-item">
+                    1. <b>Nie, Q.</b>, Liu, T.*, 2025. Large language models: Tools for new environmental decision-making. <i>Journal of Environmental Management</i> 375, 124373. 
+                    <a href="https://doi.org/10.1016/j.jenvman.2025.124373">https://doi.org/10.1016/j.jenvman.2025.124373</a>
+                    <br><audio controls style="height: 20px; width: 300px; vertical-align: middle; margin-top:5px;">
+                        <source src="pic/Large Language Models for Environmental Decision-Making.mp3" type="audio/mpeg">
+                    </audio>
+                </span>
+                <span class="reference-item">
+                    2. <b>Nie, Q.</b>, Liu, T.*, 2024. Public complaints of water pollution: A long-term spatiotemporal analysis in Japan. <i>Journal of Cleaner Production</i> 482, 144239. 
+                    <a href="https://doi.org/10.1016/j.jclepro.2024.144239">https://doi.org/10.1016/j.jclepro.2024.144239</a>
+                    <br><audio controls style="height: 20px; width: 300px; vertical-align: middle; margin-top:5px;">
+                        <source src="pic/Public complaints of water pollution A long-term spatiotemporal analysis in Japan.mp3" type="audio/mpeg">
+                    </audio>
+                </span>
+            </div>
+
+            <div class="sub-heading">
+                <div class="line"></div><span>英語以外</span><div class="line"></div>
+            </div>
+            <div class="reference-list">
+                <span class="reference-item">1. <b>Nie Q.</b>*, 2022. Delineation of Digital River Network Threshold Based on Two-sided Mean Change-Point Method——Taking Nantiaoxi Watershed as an Example. <i>Journal of Green Science and Technology</i>, 10, 040.（中国語）</span>
+                <span class="reference-item">2. <b>Nie, Q.</b>, Lyu J.*, Sun X., Luo P., Shi D., Xue Q., Shen B., 2019. Spatial and temporal variations of non-point source pollution risk affected by land use changes in Bahe River Basin. <i>Journal of Water Resources and Water Engineering</i>, 05, 30.（中国語）</span>
+            </div>
+
+            <div class="sub-heading">
+                <div class="line"></div><span>発明特許</span><div class="line"></div>
+            </div>
+            <p>1. Lyu J., <b>Nie Q.</b>, Xue Q., 都市河川におけるゴムダム群の水環境保全型運用・調整手法. ZL201910414293.0</p>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>研究プロジェクト</h2></summary>
+            <div class="reference-list">
+                <span class="reference-item">1. 「高精度DEMおよびDOMデータに基づく土壌浸食予測・評価ソフトウェアの開発」. <i>上海勘測設計研究院 企業技術標準プロジェクト</i>・<b>プロジェクト責任者</b>・114.5万人民元・<em>2022.7 ~ 2023.12</em></span>
+                <span class="reference-item">2. 「中国北西部の黄土高原における気候変動と人間活動が洪水災害に及ぼす影響」. <i>京都大学防災研究所 国際共同研究プロジェクト (2019W-02)</i>・<b>研究協力者</b></span>
+                <span class="reference-item">3. 「都市雨水ビッグデータを用いた早期警戒メカニズム、資源利用理論およびスポンジシティ設計手法」. <i>中国科学技術部 国家重点研究開発計画 (2018YFE0103800)</i>・<b>研究協力者</b></span>
+                <span class="reference-item">4. 「変動環境下における黄土高原の流出量変動メカニズムに関する研究」. <i>中国国家自然科学基金 (51679185)</i>・<b>研究協力者</b></span>
+            </div>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <p style="text-align:center;">
+            [<a href="https://github.com/nieqiyang" style="color: #ae452b;"> GitHub </a>],
+            [<a href="./tools/tools.html" style="color: #ae452b;"> Tools </a>]
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('rainCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, raindrops = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            // 屏幕尺寸变化时重置雨滴数组，确保全屏分布
+            raindrops = Array.from({ length: 100 }, () => new Raindrop());
+        });
+        
+        resize();
+
+        class Raindrop {
+            constructor() {
+                // 初始加载时，让雨滴随机分布在屏幕垂直方向，避免“同时下落”的违和感
+                this.init(true);
+            }
+
+            // 核心逻辑：完全复刻您 React 版本中的 createRaindrop
+            init(isFirstLoad = false) {
+                this.x = Math.random() * width;
+                // 运行中重置（isFirstLoad为false）时，y从屏幕上方随机位置开始
+                this.y = isFirstLoad ? (Math.random() * height) : (Math.random() * -height);
+                this.speed = Math.random() * 5 + 2;
+                this.size = Math.random() * 3 + 1;
+            }
+
+            update() {
+                this.y += this.speed;
+
+                // 当雨滴完全离开屏幕底部时，执行 init() 重新随机所有属性
+                if (this.y > height + (this.size * 5)) {
+                    this.init(); 
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                
+                // 关键点：使用椭圆 API 还原 border-radius: 50% 的长椭圆效果
+                // 参数含义：(中心x, 中心y, 半轴x, 半轴y, 旋转角度, 起始角, 结束角)
+                ctx.ellipse(
+                    this.x + this.size / 2,     // 中心点 X
+                    this.y + (this.size * 5) / 2, // 中心点 Y
+                    this.size / 2,              // 长椭圆的半径（宽的一半）
+                    (this.size * 5) / 2,        // 长椭圆的半径（高的一半）
+                    0,                          // 不旋转
+                    0, 
+                    Math.PI * 2
+                );
+                
+                ctx.fill();
+            }
+        }
+
+        // 初始化 100 颗雨滴
+        raindrops = Array.from({ length: 100 }, () => new Raindrop());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            raindrops.forEach(drop => {
+                drop.update();
+                drop.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

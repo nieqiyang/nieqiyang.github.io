@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="pic/nie.ico">
+    <title>Nie Qiyang</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap');
+
+        /* 应用到 html 确保全屏有效 */
+        html {
+            height: 100%;
+            background-color: #c8d6e3; /* 英文版背景色 */
+            cursor: url('pic/11.png'), auto;
+        }
+
+        /* 鼠标按下时，html 全局变幻光标 */
+        html:active {
+            cursor: url('pic/33.png'), pointer !important;
+        }
+
+        body, html {
+            font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+            font-size: 15px;
+            line-height: 20px;
+            margin: 0;
+            padding: 0;
+            background-color: #c8d6e3;
+
+            overflow-x: hidden;
+        }
+
+        @media screen and (min-width: 768px) {
+            body { width: 768px; margin: 10px auto; }
+        }
+
+        /* Canvas Background */
+        #rainCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Layout */
+        #Maii { position: relative; z-index: 10; padding: 20px; }
+        .section-divider { margin: 26px 0 28px; border: 0.8px solid #dddddd; }
+        .flex-container { display: flex; justify-content: space-between; align-items: flex-start; }
+        
+        /* Typography */
+        h1, h2 { color: rgb(47, 18, 177); line-height: 30px; }
+        h2 { font-family: "Kosugi Maru", sans-serif; margin: 10px 0; font-size: 22px; }
+        p { margin-bottom: 9px; text-align: justify; }
+        a { color: #C39797; text-decoration: none; }
+        a:hover { color: #8FBC8F; }
+
+        /* Buttons */
+        button {
+            width: 55px; height: 55px; font-size: 10px; font-weight: bold;
+            color: #ae452b; border-radius: 15px; cursor: pointer;
+            border: 2px solid white; transition: all .2s ease-out;
+            box-shadow: 9px 9px 15px rgba(0, 0, 0, 0.2), -9px -9px 15px #c8d6e3;
+        }
+        button:hover {
+            box-shadow: inset 9px 9px 15px rgba(0, 0, 0, 0.1), inset -9px -9px 15px white;
+            filter: brightness(110%);
+        }
+
+        /* Content Blocks */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .info-card { padding: 1rem; background: #f5f5f5; border-radius: 8px; margin: 0; }
+
+        .history-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+        .history-table th { background-color: #f5f5f5; padding: 8px 12px; text-align: left; }
+        .history-table td { padding: 6px 12px; border-bottom: 1px dashed #e0e0e0; }
+        .history-table tr:hover { background-color: #f5f5f5; }
+
+        .reference-list { display: flex; flex-direction: column; gap: 10px; }
+        .sub-heading { display: flex; align-items: center; margin: 15px 0; }
+        .sub-heading .line { flex-grow: 1; border-top: 2px dashed #808080; }
+        .sub-heading span { margin: 0 8px; font-family: 'Kosugi Maru', sans-serif; }
+
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+
+<body>
+    <canvas id="rainCanvas"></canvas>
+
+    <div id="Maii">
+        <div class="flex-container">
+            <img src="pic/nieqiyang.png" alt="Nie Qiyang" style="width: 200px; height: auto;">
+            <button onclick="window.location.href = 'index.html';">日本語</button>
+        </div>
+
+        <div class="section-divider" style="margin-top: 32px; margin-bottom: 5px;"></div>
+
+        <div class="flex-container">
+            <div>
+                <p>PhD. Student. | Environmental Engineer</p>
+                <p>Graduate School of Environmental Science, Hokkaido University</p>
+                <p>E-mail : qiyangnie@elms.hokudai.ac.jp</p>
+            </div>
+            <img src="pic/pic2.jpg" style="width: 20% !important;">
+        </div>
+
+        <div class="section-divider" style="margin-top: 5px;"></div>
+
+        <h2>Brief Information</h2>
+        <div class="info-grid">
+            <p class="info-card">🌊 Through streams of data I navigate,<br>Where water flows meet digital fate,<br>Modeling patterns, both subtle and bold,<br>Stories of rivers in numbers untold.</p>
+            <p class="info-card">🤖 Where artificial minds now learn to see<br>The dance of pollutants, chemistry's plea,<br>Building bridges 'tween code and stream,<br>Water quality's future to glean.</p>
+            <p class="info-card">🌍 In nature's flow and data's might,<br>Resources managed with newfound sight,<br>Merging science with wisdom deep,<br>Earth's precious waters safe to keep.</p>
+            <p class="info-card">🔬 Through models born of thought and care,<br>A sustainable future we prepare,<br>Where AI and hydrology blend,<br>New solutions, new paths to tend.</p>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>Curriculum Vitae</h2></summary>
+            <table class="history-table">
+                <thead>
+                    <tr><th>Time</th><th>Institution</th><th>Role</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>2024 - Present</td><td>Hokkaido University</td><td>PhD. Student</td></tr>
+                    <tr><td>2020 - 2023</td><td>Shanghai Investigation, Design & Research Institute Co., Ltd.</td><td>Engineer</td></tr>
+                    <tr><td>2017 - 2020</td><td>Chang'an University</td><td>Master</td></tr>
+                    <tr><td>2013 - 2017</td><td>Nanjing Forestry University</td><td>Bachelor</td></tr>
+                </tbody>
+            </table>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>Publications and Patents</h2></summary>
+            <div class="reference-list">
+                <span class="reference-item">
+                    1. <b>Nie, Q.</b>, Liu, T.*, 2025. Large language models: Tools for new environmental decision-making. <i>Journal of Environmental Management</i> 375, 124373. 
+                    <a href="https://doi.org/10.1016/j.jenvman.2025.124373" style="color: #0066cc;">https://doi.org/10.1016/j.jenvman.2025.124373</a>
+                    <br><audio controls style="height: 20px; width: 300px; vertical-align: middle; margin-top:5px;">
+                        <source src="pic/Large Language Models for Environmental Decision-Making.mp3" type="audio/mpeg">
+                    </audio>
+                </span>
+                <span class="reference-item">
+                    2. <b>Nie, Q.</b>, Liu, T.*, 2024. Public complaints of water pollution: A long-term spatiotemporal analysis in Japan. <i>Journal of Cleaner Production</i> 482, 144239. 
+                    <a href="https://doi.org/10.1016/j.jclepro.2024.144239" style="color: #0066cc;">https://doi.org/10.1016/j.jclepro.2024.144239</a>
+                    <br><audio controls style="height: 20px; width: 300px; vertical-align: middle; margin-top:5px;">
+                        <source src="pic/Public complaints of water pollution A long-term spatiotemporal analysis in Japan.mp3" type="audio/mpeg">
+                    </audio>
+                </span>
+            </div>
+
+            <div class="sub-heading">
+                <div class="line"></div><span>Non-English</span><div class="line"></div>
+            </div>
+            <div class="reference-list">
+                <span class="reference-item">1. <b>Nie Q.</b>*, 2022. Delineation of Digital River Network Threshold Based on Two-sided Mean Change-Point Method. <i>Journal of Green Science and Technology</i>. (Chinese)</span>
+                <span class="reference-item">2. <b>Nie, Q.</b>, Lyu J.*, et al., 2019. Spatial and temporal variations of non-point source pollution risk. <i>Journal of Water Resources and Water Engineering</i>. (Chinese)</span>
+            </div>
+
+            <div class="sub-heading">
+                <div class="line"></div><span>Authorized Invention Patent</span><div class="line"></div>
+            </div>
+            <p>1. Lyu J., <b>Nie Q.</b>, Xue Q., A Water Ecological Regulation Method for Urban River Rubber Dam Group. ZL201910414293.0</p>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <details open>
+            <summary><h2>Projects</h2></summary>
+            <div class="reference-list">
+                <span class="reference-item">1. "Development of Digital Software for Erosion Prediction and Assessment Based on High-Resolution DEM and DOM Data". <i>CTGC SIDRI Corporate Scientific and Technical Standards Project</i>・<b>Project Leader</b>・CNY 1.145M・<em>2022.7 ~ 2023.12</em></span>
+                <span class="reference-item">2. "Effects of Climate and Human Activities on Flood Disaster of Loess Plateau in Northwestern China". <i>DPRI Kyoto University (2019W-02)</i>・<b>Key Participant</b></span>
+                <span class="reference-item">3. "Urban Stormwater Big Data Early Warning Mechanism, Resource Utilization Theory, and Sponge City Design Methods". <i>MOST China National Key R&D Program (2018YFE0103800)</i>・<b>Key Participant</b></span>
+                <span class="reference-item">4. "Study on Runoff Evolution Mechanism in Loess Plateau under Changing Environment". <i>National Natural Science Foundation of China (51679185)</i>・<b>Key Participant</b></span>
+            </div>
+        </details>
+
+        <div class="section-divider"></div>
+
+        <p style="text-align:center;">
+            [<a href="https://github.com/nieqiyang" style="color: rgb(47, 18, 177);"> GitHub </a>],
+            [<a href="./tools/tools.html" style="color: rgb(47, 18, 177);"> Tools </a>]
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('rainCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, raindrops = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            raindrops = Array.from({ length: 100 }, () => new Raindrop());
+        });
+        
+        resize();
+
+        class Raindrop {
+            constructor() { this.init(true); }
+            init(isFirstLoad = false) {
+                this.x = Math.random() * width;
+                this.y = isFirstLoad ? (Math.random() * height) : (Math.random() * -height);
+                this.speed = Math.random() * 5 + 2;
+                this.size = Math.random() * 3 + 1;
+            }
+            update() {
+                this.y += this.speed;
+                if (this.y > height + (this.size * 5)) this.init();
+            }
+            draw() {
+                ctx.fillStyle = '#e4ebf2'; // Soft light blue-grey for rain
+                ctx.beginPath();
+                ctx.ellipse(
+                    this.x + this.size / 2, 
+                    this.y + (this.size * 5) / 2, 
+                    this.size / 2, 
+                    (this.size * 5) / 2, 
+                    0, 0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+
+        raindrops = Array.from({ length: 100 }, () => new Raindrop());
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            raindrops.forEach(drop => { drop.update(); drop.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

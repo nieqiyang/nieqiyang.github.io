@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<! Nie Qiyang 2024.03.01>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>EFDCinp Process</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Honk:MORF,SHLN@5,59.4&family=Press+Start+2P&display=swap');
+
+            .honk {
+                font-family: "Honk", system-ui;
+                font-optical-sizing: auto;
+                font-weight: 400;
+                font-style: normal;
+                font-variation-settings:
+                    "MORF" 28,
+                    "SHLN" 64.2;
+            }
+
+            .bungee-shade-regular {
+                font-family: "Bungee Shade", sans-serif;
+                font-weight: 400;
+                font-style: normal;
+            }
+
+            .press-start 2p-regular {
+                font-family: "Press Start 2P", system-ui;
+                font-weight: 400;
+                font-style: normal;
+            }
+
+            #map {
+                height: 70vh;
+            }
+
+            body {
+                width: 80%;
+                font-family: "Honk", system-ui;
+                margin: 0 auto;
+                background-color: #B3CFCD;
+                min-width: 1000px;
+                max-width: 1000px;
+                /* 设置最小宽度为300像素 */
+                min-height: 200px;
+                /* 设置最小高度为200像素 */
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 80px;
+                /* 调整字号大小，可以根据需要更改 */
+                margin-bottom: 30px;
+                /* 可选：调整标题下方的间距 */
+                margin-top: 30px;
+            }
+
+            .footer-link {
+                font-family: "Press Start 2P", system-ui;
+                position: fixed;
+                bottom: 95%;
+                right: 5%;
+                font-size: 11px;
+                /* 设置背景颜色 */
+                padding: 10px;
+                border-radius: 5px;
+            }
+
+            .label-container {
+                font-family: "Bungee Shade", sans-serif;
+                text-align: center;
+                font-size: 30px;
+                margin-top: 40px;
+            }
+
+            #customButton {
+                margin-top: 10px;
+            }
+
+            #geojsonInput {
+                display: none;
+                /* 隐藏原始的文件输入元素 */
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>EFDCinp Process</h1>
+        <button for="geojsonInput" id="customButton" onclick="openFileExplorer()"
+            style="font-family: 'Press Start 2P', system-ui;margin-top: 10px;margin-left: 40.21%;">Load
+            GeoJSON</button>
+        <input type="file" id="geojsonInput" accept=".geojson" onchange="checkFile()"
+            style="margin-top: 10px;margin-left: 31.7%;">
+
+        <div class="footer-link">
+            <a href="https://nieqiyang.github.io/" target="_blank">@Nie Qiyang</a>
+        </div>
+
+        <div id="map" style="margin-top: 50px;"></div>
+
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <script>
+            var map = L.map('map').setView([0, 0], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            function loadGeoJSON() {
+                var geojsonInput = document.getElementById('geojsonInput');
+                var file = geojsonInput.files[0];
+
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var geojson = JSON.parse(e.target.result);
+
+                        // Display GeoJSON on the map
+                        L.geoJSON(geojson).addTo(map);
+
+                        // Optionally fit the map bounds to the GeoJSON layer
+                        map.fitBounds(L.geoJSON(geojson).getBounds());
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please select a GeoJSON file to load.');
+                }
+            }
+            function openFileExplorer() {
+                document.getElementById('geojsonInput').click();
+            }
+            function checkFile() {
+                var fileInput = document.getElementById('geojsonInput');
+
+                if (fileInput.files.length > 0) {
+                    // 文件已选择
+                    var selectedFile = fileInput.files[0];
+                    console.log("选择了文件：" + selectedFile.name);
+                    loadGeoJSON()
+                } else {
+                    // 没有选择新文件
+                    console.log("没有选择新文件");
+                }
+            }
+        </script>
+    </body>
+
+</html>

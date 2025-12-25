@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>力量水平评估表</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #weightInput {
+            margin-bottom: 20px;
+            padding: 5px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        .chartContainer {
+            width: 80%;
+            max-width: 800px;
+            margin-bottom: 40px;
+        }
+
+        #genderSelect {
+            margin-bottom: 20px;
+        }
+
+        h7 {
+            color: gray;
+            padding: 5px;
+            font-size: 10px;
+            position: relative;
+            left: 10%;
+            display: inline-block;
+        }
+
+        @media (max-width: 600px) {
+            .chartContainer {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>力量水平评估表</h1>
+
+    <div id="genderSelect">
+        <label for="gender">选择性别：</label>
+        <select id="gender" onchange="updateCharts()">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+        </select>
+    </div>
+
+    <input type="number" id="weightInput" placeholder="输入体重(kg)" step="0.1">
+    <h7>Nie Qiyang <br> Data from ExRx.net </h7>
+
+    <div class="chartContainer">
+        <h2>深蹲</h2>
+        <canvas id="squatChart"></canvas>
+    </div>
+    <div class="chartContainer">
+        <h2>卧推</h2>
+        <canvas id="benchPressChart"></canvas>
+    </div>
+    <div class="chartContainer">
+        <h2>硬拉</h2>
+        <canvas id="deadliftChart"></canvas>
+    </div>
+    <div class="chartContainer">
+        <h2>实力推</h2>
+        <canvas id="overheadPressChart"></canvas>
+    </div>
+
+    <script>
+        const maleData = {
+            squatData: [
+                { body: 52, untrained: 35.0, novice: 65.0, intermediate: 80.0, advanced: 107.5, elite: 145.0, worldrecord: 240 },
+                { body: 56, untrained: 37.5, novice: 70.0, intermediate: 87.5, advanced: 117.5, elite: 157.5, worldrecord: 245 },
+                { body: 60, untrained: 40.0, novice: 77.5, intermediate: 92.5, advanced: 127.5, elite: 167.5, worldrecord: 250 },
+                { body: 67, untrained: 45.0, novice: 85.0, intermediate: 105.0, advanced: 142.5, elite: 185.0, worldrecord: 265 },
+                { body: 75, untrained: 50.0, novice: 92.5, intermediate: 112.5, advanced: 155.0, elite: 202.5, worldrecord: 300 },
+                { body: 82, untrained: 55.0, novice: 100.0, intermediate: 122.5, advanced: 167.5, elite: 217.5, worldrecord: 345 },
+                { body: 90, untrained: 57.5, novice: 105.0, intermediate: 130.0, advanced: 177.5, elite: 230.0, worldrecord: 365 },
+                { body: 100, untrained: 60.0, novice: 110.0, intermediate: 135.0, advanced: 185.0, elite: 240.0, worldrecord: 374 },
+                { body: 110, untrained: 62.5, novice: 115.0, intermediate: 140.0, advanced: 192.5, elite: 250.0, worldrecord: 390 },
+                { body: 125, untrained: 65.0, novice: 117.5, intermediate: 145.0, advanced: 197.5, elite: 257.5, worldrecord: 410 },
+                { body: 145, untrained: 67.5, novice: 122.5, intermediate: 147.5, advanced: 202.5, elite: 262.5, worldrecord: 419 }
+            ],
+            benchPressData: [
+                { body: 52, untrained: 37.5, novice: 50.0, intermediate: 60.0, advanced: 82.5, elite: 100.0, worldrecord: 199.0 },
+                { body: 56, untrained: 40.0, novice: 52.5, intermediate: 62.5, advanced: 90.0, elite: 110.0, worldrecord: 207.0 },
+                { body: 60, untrained: 45.0, novice: 57.5, intermediate: 70.0, advanced: 95.0, elite: 117.5, worldrecord: 211.0 },
+                { body: 67, untrained: 50.0, novice: 65.0, intermediate: 77.5, advanced: 107.5, elite: 132.5, worldrecord: 229.0 },
+                { body: 75, untrained: 55.0, novice: 70.0, intermediate: 85.0, advanced: 115.0, elite: 145.0, worldrecord: 245.0 },
+                { body: 82, untrained: 60.0, novice: 75.0, intermediate: 90.0, advanced: 125.0, elite: 157.5, worldrecord: 253.0 },
+                { body: 90, untrained: 62.5, novice: 80.0, intermediate: 97.5, advanced: 132.5, elite: 162.5, worldrecord: 277.0 },
+                { body: 100, untrained: 62.5, novice: 82.5, intermediate: 102.5, advanced: 137.5, elite: 172.5, worldrecord: 280.0 },
+                { body: 110, untrained: 65.0, novice: 85.0, intermediate: 105.0, advanced: 142.5, elite: 180.0, worldrecord: 305.0 },
+                { body: 125, untrained: 67.5, novice: 87.5, intermediate: 107.5, advanced: 147.5, elite: 185.0, worldrecord: 307.0 },
+                { body: 145, untrained: 70.0, novice: 90.0, intermediate: 112.5, advanced: 152.5, elite: 190.0, worldrecord: 320.0 }
+            ],
+            deadliftData: [
+                { body: 52, untrained: 42.5, novice: 82.5, intermediate: 92.5, advanced: 135.0, elite: 175.0, worldrecord: 270.0 },
+                { body: 56, untrained: 47.5, novice: 87.5, intermediate: 100.0, advanced: 145.0, elite: 187.5, worldrecord: 288.0 },
+                { body: 60, untrained: 50.0, novice: 95.0, intermediate: 110.0, advanced: 155.0, elite: 200.0, worldrecord: 286.0 },
+                { body: 67, untrained: 57.5, novice: 107.5, intermediate: 122.5, advanced: 172.5, elite: 217.5, worldrecord: 320.0 },
+                { body: 75, untrained: 62.5, novice: 115.0, intermediate: 135.0, advanced: 185.0, elite: 235.0, worldrecord: 345.0 },
+                { body: 82, untrained: 67.5, novice: 125.0, intermediate: 142.5, advanced: 200.0, elite: 250.0, worldrecord: 405.0 },
+                { body: 90, untrained: 70.0, novice: 132.5, intermediate: 152.5, advanced: 207.5, elite: 257.5, worldrecord: 400.0 },
+                { body: 100, untrained: 75.0, novice: 137.5, intermediate: 160.0, advanced: 217.5, elite: 265.0, worldrecord: 433.0 },
+                { body: 110, untrained: 77.5, novice: 145.0, intermediate: 165.0, advanced: 222.5, elite: 270.0, worldrecord: 441.0 },
+                { body: 125, untrained: 80.0, novice: 147.5, intermediate: 170.0, advanced: 227.5, elite: 272.5, worldrecord: 431.0 },
+                { body: 145, untrained: 82.5, novice: 152.5, intermediate: 172.5, advanced: 230.0, elite: 277.5, worldrecord: 427.0 }
+            ],
+            overheadPressData: [
+                { body: 52, untrained: 22.5, novice: 32.5, intermediate: 40.0, advanced: 50.0, elite: 60.0, worldrecord: 119.0 },
+                { body: 56, untrained: 25.0, novice: 35.0, intermediate: 45.0, advanced: 52.5, elite: 65.0, worldrecord: 122.0 },
+                { body: 60, untrained: 27.5, novice: 37.5, intermediate: 47.5, advanced: 57.5, elite: 70.0, worldrecord: 126.0 },
+                { body: 67, untrained: 30.0, novice: 42.5, intermediate: 55.0, advanced: 62.5, elite: 77.5, worldrecord: 134.0 },
+                { body: 75, untrained: 32.5, novice: 45.0, intermediate: 57.5, advanced: 70.0, elite: 85.0, worldrecord: 144.0 },
+                { body: 82, untrained: 35.0, novice: 50.0, intermediate: 62.5, advanced: 75.0, elite: 100.0, worldrecord: 161.0 },
+                { body: 90, untrained: 37.5, novice: 52.5, intermediate: 65.0, advanced: 77.5, elite: 105.0, worldrecord: 179.0 },
+                { body: 100, untrained: 40.0, novice: 55.0, intermediate: 70.0, advanced: 82.5, elite: 115.0, worldrecord: 187.0 },
+                { body: 110, untrained: 42.5, novice: 57.5, intermediate: 72.5, advanced: 85.0, elite: 120.0, worldrecord: 203.0 },
+                { body: 125, untrained: 42.5, novice: 60.0, intermediate: 75.0, advanced: 87.5, elite: 122.5, worldrecord: 203.0 },
+                { body: 145, untrained: 45.0, novice: 60.0, intermediate: 75.0, advanced: 90.0, elite: 125.0, worldrecord: 211.0 }
+            ]
+        };
+
+        const femaleData = {
+            squatData: [
+                { body: 44, untrained: 20.0, novice: 37.5, intermediate: 45.0, advanced: 60.0, elite: 75.0, worldrecord: 127 },
+                { body: 48, untrained: 22.5, novice: 40.0, intermediate: 47.5, advanced: 65.0, elite: 80.0, worldrecord: 136 },
+                { body: 52, untrained: 25.0, novice: 45.0, intermediate: 52.5, advanced: 67.5, elite: 87.5, worldrecord: 155 },
+                { body: 56, untrained: 25.0, novice: 47.5, intermediate: 55.0, advanced: 72.5, elite: 90.0, worldrecord: 157 },
+                { body: 60, untrained: 27.5, novice: 50.0, intermediate: 60.0, advanced: 77.5, elite: 95.0, worldrecord: 164 },
+                { body: 67, untrained: 30.0, novice: 55.0, intermediate: 62.5, advanced: 85.0, elite: 105.0, worldrecord: 178 },
+                { body: 75, untrained: 32.5, novice: 57.5, intermediate: 67.5, advanced: 90.0, elite: 115.0, worldrecord: 194 },
+                { body: 82, untrained: 35.0, novice: 62.5, intermediate: 75.0, advanced: 97.5, elite: 122.5, worldrecord: 200 },
+                { body: 90, untrained: 37.5, novice: 67.5, intermediate: 80.0, advanced: 105.0, elite: 132.5, worldrecord: 210 }
+            ],
+            benchPressData: [
+                { body: 44, untrained: 22.5, novice: 30.0, intermediate: 35.0, advanced: 42.5, elite: 52.5, worldrecord: 80.0 },
+                { body: 48, untrained: 25.0, novice: 32.5, intermediate: 37.5, advanced: 45.0, elite: 57.5, worldrecord: 90.0 },
+                { body: 52, untrained: 27.5, novice: 35.0, intermediate: 37.5, advanced: 50.0, elite: 62.5, worldrecord: 107.0 },
+                { body: 56, untrained: 30.0, novice: 37.5, intermediate: 40.0, advanced: 52.5, elite: 65.0, worldrecord: 120.0 },
+                { body: 60, untrained: 32.5, novice: 40.0, intermediate: 42.5, advanced: 57.5, elite: 67.5, worldrecord: 122.0 },
+                { body: 67, untrained: 35.0, novice: 40.0, intermediate: 47.5, advanced: 62.5, elite: 75.0, worldrecord: 124.0 },
+                { body: 75, untrained: 37.5, novice: 42.5, intermediate: 52.5, advanced: 65.0, elite: 85.0, worldrecord: 128.0 },
+                { body: 82, untrained: 37.5, novice: 50.0, intermediate: 55.0, advanced: 72.5, elite: 90.0, worldrecord: 133.0 },
+                { body: 90, untrained: 40.0, novice: 52.5, intermediate: 60.0, advanced: 75.0, elite: 95.0, worldrecord: 137.0 }
+            ],
+            deadliftData: [
+                { body: 44, untrained: 25.0, novice: 47.5, intermediate: 50.0, advanced: 80.0, elite: 105.0, worldrecord: 159.0 },
+                { body: 48, untrained: 27.5, novice: 52.5, intermediate: 60.0, advanced: 85.0, elite: 110.0, worldrecord: 168.0 },
+                { body: 52, untrained: 30.0, novice: 55.0, intermediate: 62.5, advanced: 90.0, elite: 115.0, worldrecord: 184.0 },
+                { body: 56, untrained: 32.5, novice: 60.0, intermediate: 67.5, advanced: 95.0, elite: 120.0, worldrecord: 189.0 },
+                { body: 60, untrained: 35.0, novice: 62.5, intermediate: 72.5, advanced: 100.0, elite: 125.0, worldrecord: 198.0 },
+                { body: 67, untrained: 37.5, novice: 67.5, intermediate: 80.0, advanced: 110.0, elite: 135.0, worldrecord: 214.0 },
+                { body: 75, untrained: 40.0, novice: 72.5, intermediate: 85.0, advanced: 117.5, elite: 145.0, worldrecord: 227.0 },
+                { body: 82, untrained: 42.5, novice: 80.0, intermediate: 92.5, advanced: 125.0, elite: 150.0, worldrecord: 229.0 },
+                { body: 90, untrained: 45.0, novice: 87.5, intermediate: 97.5, advanced: 130.0, elite: 160.0, worldrecord: 230.0 }
+            ],
+            overheadPressData: [
+                { body: 44, untrained: 15.0, novice: 17.5, intermediate: 22.5, advanced: 30.0, elite: 40.0, worldrecord: 61.0 },
+                { body: 48, untrained: 15.0, novice: 20.0, intermediate: 25.0, advanced: 32.5, elite: 42.5, worldrecord: 67.0 },
+                { body: 52, untrained: 17.5, novice: 22.5, intermediate: 27.5, advanced: 35.0, elite: 45.0, worldrecord: 77.0 },
+                { body: 56, untrained: 17.5, novice: 22.5, intermediate: 27.5, advanced: 37.5, elite: 47.5, worldrecord: 88.0 },
+                { body: 60, untrained: 17.5, novice: 25.0, intermediate: 30.0, advanced: 40.0, elite: 50.0, worldrecord: 90.0 },
+                { body: 67, untrained: 20.0, novice: 27.5, intermediate: 32.5, advanced: 42.5, elite: 55.0, worldrecord: 91.0 },
+                { body: 75, untrained: 22.5, novice: 30.0, intermediate: 35.0, advanced: 47.5, elite: 62.5, worldrecord: 94.0 },
+                { body: 82, untrained: 22.5, novice: 32.5, intermediate: 37.5, advanced: 50.0, elite: 65.0, worldrecord: 96.0 },
+                { body: 90, untrained: 25.0, novice: 35.0, intermediate: 40.0, advanced: 52.5, elite: 67.5, worldrecord: 97.0 }
+            ]
+        };
+
+        let squatChart, benchPressChart, deadliftChart, overheadPressChart;
+
+        function createChart(ctx, data, title) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        { label: '未训练', data: data.map(d => ({ x: d.body, y: d.untrained })), borderColor: 'red', fill: false },
+                        { label: '新手', data: data.map(d => ({ x: d.body, y: d.novice })), borderColor: 'blue', fill: false },
+                        { label: '中级', data: data.map(d => ({ x: d.body, y: d.intermediate })), borderColor: 'green', fill: false },
+                        { label: '高级', data: data.map(d => ({ x: d.body, y: d.advanced })), borderColor: 'purple', fill: false },
+                        { label: '精英', data: data.map(d => ({ x: d.body, y: d.elite })), borderColor: 'orange', fill: false },
+                        { label: '世界纪录', data: data.map(d => ({ x: d.body, y: d.worldrecord })), borderColor: 'black', fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: '体重 (kg)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: `${title}重量 (kg)`
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} kg`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function interpolate(x, x1, y1, x2, y2) {
+            return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+        }
+
+        function updateChart(chart, data) {
+            const weight = parseFloat(document.getElementById('weightInput').value);
+            const gender = document.getElementById('gender').value;
+            const minWeight = gender === 'male' ? 52 : 44;
+            const maxWeight = gender === 'male' ? 145 : 90;
+
+            // if (isNaN(weight) || weight < minWeight || weight > maxWeight) {
+            //     alert(`请输入有效的体重（${minWeight}-${maxWeight}kg）`);
+            //     return;
+            // }
+
+            // 移除之前添加的插值点数据集
+            chart.data.datasets = chart.data.datasets.filter(dataset => !dataset.interpolated);
+
+            chart.data.datasets.forEach((dataset, index) => {
+                const points = dataset.data;
+                let interpolatedY;
+
+                for (let j = 0; j < points.length - 1; j++) {
+                    if (weight >= points[j].x && weight <= points[j + 1].x) {
+                        interpolatedY = interpolate(weight, points[j].x, points[j].y, points[j + 1].x, points[j + 1].y);
+                        break;
+                    }
+                }
+
+                if (interpolatedY !== undefined) {
+                    // 为每个插值点创建一个新的数据集
+                    chart.data.datasets.push({
+                        label: `${dataset.label} (插值)`,
+                        data: [{ x: weight, y: interpolatedY }],
+                        borderColor: dataset.borderColor,
+                        backgroundColor: dataset.borderColor,
+                        pointStyle: 'triangle',
+                        pointRadius: 8,
+                        pointHoverRadius: 10,
+                        showLine: false,
+                        interpolated: true
+                    });
+                }
+            });
+
+            chart.update();
+        }
+
+        function updateAllCharts(data) {
+            updateChart(squatChart, data.squatData);
+            updateChart(benchPressChart, data.benchPressData);
+            updateChart(deadliftChart, data.deadliftData);
+            updateChart(overheadPressChart, data.overheadPressData);
+        }
+
+        function updateCharts() {
+            const gender = document.getElementById('gender').value;
+            const data = gender === 'male' ? maleData : femaleData;
+            const ctx = {
+                squat: document.getElementById('squatChart').getContext('2d'),
+                benchPress: document.getElementById('benchPressChart').getContext('2d'),
+                deadlift: document.getElementById('deadliftChart').getContext('2d'),
+                overheadPress: document.getElementById('overheadPressChart').getContext('2d')
+            };
+
+            // 清除旧图表
+            if (squatChart) squatChart.destroy();
+            if (benchPressChart) benchPressChart.destroy();
+            if (deadliftChart) deadliftChart.destroy();
+            if (overheadPressChart) overheadPressChart.destroy();
+
+            // 创建新图表
+            squatChart = createChart(ctx.squat, data.squatData, '深蹲');
+            benchPressChart = createChart(ctx.benchPress, data.benchPressData, '卧推');
+            deadliftChart = createChart(ctx.deadlift, data.deadliftData, '硬拉');
+            overheadPressChart = createChart(ctx.overheadPress, data.overheadPressData, '实力推');
+
+            // 更新体重输入框的placeholder
+            const minWeight = gender === 'male' ? 52 : 44;
+            const maxWeight = gender === 'male' ? 145 : 90;
+            document.getElementById('weightInput').placeholder = `输入体重(${minWeight}-${maxWeight}kg)`;
+
+            // 更新图表
+            const weight = document.getElementById('weightInput').value;
+            if (weight) {
+                updateAllCharts(data);
+            }
+        }
+
+        document.getElementById('weightInput').addEventListener('input', () => {
+            const gender = document.getElementById('gender').value;
+            const data = gender === 'male' ? maleData : femaleData;
+            updateAllCharts(data);
+        });
+
+        // 初始化图表
+        updateCharts();
+    </script>
+</body>
+
+</html>
