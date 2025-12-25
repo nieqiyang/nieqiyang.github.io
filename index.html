@@ -12,6 +12,7 @@
             height: 100%;
             background-color: #F2F1EA;
             cursor: url('pic/11.png'), auto;
+            min-width: 768px;
         }
 
         /* 鼠标按下时，html 全局变幻光标 */
@@ -30,9 +31,12 @@
         }
 
         @media screen and (min-width: 768px) {
-            body { width: 768px; margin: 10px auto; }
+            body {width: 768px; margin: 10px auto; }
         }
-
+        @media screen and (max-width: 767px) and (any-hover: none) {
+            html {min-width: 0}
+            body {width: 100%; margin: 0;}
+        }
         /* 背景 Canvas */
         #rainCanvas {
             position: fixed;

@@ -13,6 +13,7 @@
             height: 100%;
             background-color: #c8d6e3; /* 英文版背景色 */
             cursor: url('pic/11.png'), auto;
+            min-width: 768px;
         }
 
         /* 鼠标按下时，html 全局变幻光标 */
@@ -33,6 +34,10 @@
 
         @media screen and (min-width: 768px) {
             body { width: 768px; margin: 10px auto; }
+        }
+        @media screen and (max-width: 767px) and (any-hover: none) {
+            html {min-width: 0}
+            body {width: 100%; margin: 0;}
         }
 
         /* Canvas Background */
