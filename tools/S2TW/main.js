@@ -1,3 +1,20 @@
+// PWA化のためにService Workerを登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service_worker.js')
+    .then((registration) => {
+      console.log(`[Main] ServiceWorker registration finished. Scope:${registration.scope}`);
+    })
+    .catch((reason) => {
+      console.log(`[Main] ServiceWorker registratio failed. Reason:${reason}`);
+    });
+  });
+}
+
+const TYPE_BROWSER = 'browser_';
+const TYPE_INAPP = 'inapp_';
+const TYPE_SPECIAL = 'special_';
+const TYPE_UNKNOWN = 'unknown_';
 /**
  * 在可能范围内判定浏览器。
  * （参考）
