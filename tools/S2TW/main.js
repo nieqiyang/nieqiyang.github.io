@@ -527,12 +527,9 @@ window.onload = () => {
 // 言語切替
 // 参考: https://www.google.com/intl/ja/chrome/demos/speech.html
 var langs = [
+  ['English', ['en-US', 'United States']],
   ['中文', ['cmn-Hans-CN', '普通话']],
   ['Japanese', ['ja-JP']],
-  ['English', ['en-US', 'United States'],
-    ['en-GB', 'United Kingdom'],
-  ],
-  
 ];
 
 for (var i = 0; i < langs.length; i++) {
