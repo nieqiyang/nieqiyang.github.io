@@ -312,14 +312,10 @@ function vr_function() {
       }
     }
 
-    // 更新界面显示的文字（支持平假名转换功能）
-    if (document.getElementById('checkbox_hiragana').checked && lang == 'ja-JP') {
-      document.getElementById('result_text').innerHTML 
-        = [resultToHiragana(last_finished), resultToHiragana(current_transcripts)].join('<br>');
-    } else {
-      document.getElementById('result_text').innerHTML 
-        = [last_finished, current_transcripts].join('<br>');
-    }
+    // 更新界面显示的文字
+    document.getElementById('result_text').innerHTML 
+      = [last_finished, current_transcripts].join('<br>');
+  
     setTimeoutForClearText();
 
     if (need_reset) { vr_function(); } // 确定一段话后重启以优化性能
@@ -579,20 +575,6 @@ function updateLanguage() {
     vr_function();
   }
 
-  // 日语专属逻辑处理
-  var el_status_kuromoji_loading = document.getElementById('status_kuromoji_loading');
-  var el_checkbox_hiragana = document.getElementById('checkbox_hiragana_wrapper');
-  
-  if (lang == 'ja-JP') {
-    // 如果是日语，显示 Kuromoji 加载状态和“转换为平假名”的勾选项
-    el_status_kuromoji_loading.style.display = "inline-block";
-    el_checkbox_hiragana.style.display = "inline";
-  } else {
-    // 其他语言则隐藏这些选项
-    el_status_kuromoji_loading.style.display = "none";
-    el_checkbox_hiragana.style.display = "none";
-  }
-}
 
 // 添加结果翻译功能（集成 Google 翻译挂件）
 // 参考: https://pisuke-code.com/js-usage-of-google-trans-api/
