@@ -236,7 +236,7 @@ var textUpdateTimeoutSecond = 30; // 语音识别结果未更新时，直到清�
 
 // 翻译相关变量
 let translationTimeout; // 防抖定时器
-const TRANSLATE_DELAY = 500; // 设置延迟时间（毫秒），建议 800-1000ms 获得较完整句子
+const TRANSLATE_DELAY = 800; // 设置延迟时间（毫秒），建议 800-1000ms 获得较完整句子
 
 /**
  * 核心翻译函数
