@@ -576,6 +576,7 @@ function updateLanguage() {
   }
 }
 
+
 // 添加结果翻译功能（集成 Google 翻译挂件）
 // 参考: https://pisuke-code.com/js-usage-of-google-trans-api/
 function googleTranslateElementInit() {
