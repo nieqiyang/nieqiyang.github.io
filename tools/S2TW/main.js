@@ -234,6 +234,34 @@ var last_finished = ''; // 最后确定的文本。为了防止确定部分瞬�
 var textUpdateTimeoutID = 0;
 var textUpdateTimeoutSecond = 30; // 语音识别结果未更新时，直到清空结果的秒数（0 或以下则不自动清空）
 
+// 翻译相关变量
+let translationTimeout; // 防抖定时器
+const TRANSLATE_DELAY = 500; // 设置延迟时间（毫秒），建议 800-1000ms 获得较完整句子
+
+/**
+ * 核心翻译函数
+ * 使用 Google 免费翻译接口（注意：此接口在大规模使用下可能有频率限制）
+ */
+async function translateText(text, targetLang = 'zh-CN') {
+    if (!text || text.trim() === '') return;
+
+    // 根据您的识别语言获取源语言代码 (例如 'ja-JP' -> 'ja')
+    const sourceLang = lang.split('-')[0]; 
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const translatedContent = data[0].map(item => item[0]).join('');
+        
+        // 更新翻译显示区域
+        document.getElementById('translated_text').innerHTML = translatedContent;
+    } catch (error) {
+        console.error('翻译失败:', error);
+    }
+}
+
+
 function vr_function() {
   // 兼容性处理：支持标准 API 或 webkit 前缀 API
   window.SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
@@ -266,23 +294,23 @@ function vr_function() {
     vr_function(); // 重启识别以保持持续运行
   };
 
-  // 获得识别结果时
+
+// 获得识别结果时
   recognition.onresult = function(event) {
     var results = event.results;
-    var current_transcripts = ''; // 若有多个结果则进行拼接
+    var current_transcripts = ''; 
     var need_reset = false;
     
     for (var i = event.resultIndex; i < results.length; i++) {
       if (results[i].isFinal) {
         // --- 确定部分的处理 ---
         last_finished = results[i][0].transcript;
-        // 自动添加句号（日语习惯）
         const is_end_of_sentence = last_finished.endsWith('。') || last_finished.endsWith('？') || last_finished.endsWith('！');
-        if (lang == 'ja-JP' && is_end_of_sentence != true) {
+        if (lang == 'ja-JP' && !is_end_of_sentence) {
           last_finished += '。';
         }
 
-        var result_log = last_finished
+        var result_log = last_finished;
 
         // 检查是否开启了时间戳功能
         if (document.getElementById('checkbox_timestamp').checked) {
@@ -298,27 +326,39 @@ function vr_function() {
           result_log = timestamp + result_log
         }
 
-        // 将确定的结果插入到日志区域
         document.getElementById('result_log').insertAdjacentHTML('beforeend', result_log + '\n');
-        textAreaHeightSet(document.getElementById('result_log')); // 调整文本域高度
+        textAreaHeightSet(document.getElementById('result_log'));
         need_reset = true;
-        setTimeoutForClearText(); // 设置自动清空定时器
+        
+        // 确定文本后，立即触发一次翻译（可选，或者依然走防抖）
+        translateText(last_finished); 
+        
+        setTimeoutForClearText();
         flag_speech = 0;
       } else {
-        // --- 正在识别中的处理 ---
+        // --- 正在识别中的处理 (Interim) ---
         current_transcripts += results[i][0].transcript;
-        clearTimeoutForClearText(); // 正在说话时取消清空定时器
+        clearTimeoutForClearText();
         flag_speech = 1;
+
+        // 【关键改动：防抖翻译】
+        // 清除之前的定时器，防止频繁请求产生闪烁
+        clearTimeout(translationTimeout);
+        
+        // 只有当识别出的文字达到一定长度，或者停顿时才翻译
+        translationTimeout = setTimeout(() => {
+            // 这里翻译当前的临时结果 + 最后确定的结果
+            const fullText = last_finished + current_transcripts;
+            translateText(fullText);
+        }, TRANSLATE_DELAY);
       }
     }
 
-    // 更新界面显示的文字
-    document.getElementById('result_text').innerHTML 
-      = [last_finished, current_transcripts].join('<br>');
-  
-    setTimeoutForClearText();
+    // 更新原文界面显示
+    const fullContent = [last_finished, current_transcripts].join('<br>');
+    document.getElementById('result_text').innerHTML = fullContent;
 
-    if (need_reset) { vr_function(); } // 确定一段话后重启以优化性能
+    if (need_reset) { vr_function(); }
   }
 
   flag_speech = 0;
@@ -354,6 +394,7 @@ function setTimeoutForClearText() {
   textUpdateTimeoutID = setTimeout(
     () => {
       document.getElementById('result_text').innerHTML = "";
+      document.getElementById('translated_text').innerHTML = ""; // 新增：同步清空翻译区
       last_finished = ''; // 同时清除上次的确定结果。
       textUpdateTimeoutID = 0;
     },

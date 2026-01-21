@@ -465,3 +465,32 @@ select {
 	/* text-align: center; */
 	vertical-align: middle;
 }
+
+/* 1. 强制父级容器内部使用 Flex 布局 */
+#text_overlay_wrapper > div[style*="display: flex"] {
+    display: flex !important;
+    flex-direction: row !important; /* 确保是横向排列 */
+}
+
+/* 2. 修正两个文字容器的定位 */
+#result_text, #translated_text {
+    position: relative !important; /* 核心修改：取消绝对定位，允许并排 */
+    flex: 1 !important;           /* 核心修改：每人各占 50% 宽度 */
+    width: 50% !important;
+    bottom: auto !important;       /* 取消原始的底部偏移 */
+    left: auto !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;     /* 保持文字从底部向上堆叠的视觉感 */
+}
+
+/* 3. 细节调整：防止文字贴得太死 */
+#result_text {
+    padding-right: 20px !important;
+    border-right: 1px dashed rgba(255, 255, 255, 0.2); /* 中间加条虚线方便区分 */
+}
+
+#translated_text {
+    padding-left: 20px !important;
+}
