@@ -1,5 +1,5 @@
-<!DOCTYPE html class="notranslate">
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh-CN" class="notranslate">
 
 <head prefix="og: http://ogp.me/ns">
   <meta charset="utf-8">
@@ -7,15 +7,15 @@
   <meta http-equiv="Cache-Control" content="no-cache">
 
   <title>语音转文字摄像头叠加幕</title>
-  <meta name="description" content="这是一个使用 Web Speech API 将语音识别结果作为双语字幕叠加在摄像头画面上的网页。你可以通过录屏或浏览器采集，将其用于视频会议、直播等场景。">
+  <meta name="description" content="这是一个使用 Web Speech API 将语音识别结果作为双语字幕叠加在摄像头画面上的网页。">
   <meta property="og:title" content="语音转文字摄像头叠加幕">
-  <meta property="og:description" content="这是一个使用 Web Speech API 将语音识别结果作为字幕叠加在摄像头画面上的网页。你可以通过录屏或浏览器采集，将其用于视频会议、直播等场景。">
+  <meta property="og:description" content="这是一个使用 Web Speech API 将语音识别结果作为字幕叠加在摄像头画面上的网页。">
   <meta property="og:url" content="https://nieqiyang.github.io/tools/S2TW/">
   <meta property="og:image" content="https://nieqiyang.github.io/pic/pic2.jpg">
   <meta name="twitter:card" content="summary">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com"> 
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?ver=202301282200" type="text/css" media="screen">
   <link rel="manifest" href="manifest.json">
@@ -26,164 +26,98 @@
     <div id="status" class="error">正在启动...</div>
     <div id="status_kuromoji_loading" class="hidden"></div>
 
-    <div id="video_wrapper" class="video_wrapper">
-      <video id="result_video" class="video_area" autoplay></video>
-      <div id="video_bg" class="video_bg hidden"></div>
-      <!-- <div id="text_overlay_wrapper" class="text_overlay_wrapper full">
-        <div id="text_bg" class="text_bg"></div>
-        <div id="result_text" class="text_area">语音识别开始后，文字将显示在这里。请确保麦克风和摄像头已启用。</div>
-      </div> -->
-      <div id="text_overlay_wrapper" class="text_overlay_wrapper full">
-          <div id="text_bg" class="text_bg"></div>
-          <div style="display: flex; width: 100%; height: 100%; position: relative; z-index: 10;">
-              <div id="result_text" class="text_area notranslate">原文...</div>
-              <div id="translated_text" class="text_area">翻译...</div>
-          </div>
-      </div>
-  
-      <img alt="全屏" src="fullscreen.svg" id="FullScreenBtn" class="FullScreenBtn" width="20" height="20" style="display:block">
-    </div>
-
-    <div id="help_on_error" class="help_on_error">
-      摄像头或麦克风无法工作时 → 请尝试刷新页面或检查浏览器设置: <a href="https://support.google.com/chrome/answer/2693767?hl=ja" target="_blank">Chrome 帮助</a>
+    <div id="video_wrapper" class="video_wrapper" style="background-color: #1a1a1a;">
+        <div id="text_overlay_wrapper" class="text_overlay_wrapper full">
+            <div id="text_bg" class="text_bg"></div>
+            <div style="display: flex; width: 100%; height: 100%; position: relative; z-index: 10;">
+                <div id="result_text" class="text_area notranslate">原文...</div>
+                <div id="translated_text" class="text_area">翻译...</div>
+            </div>
+        </div>
+        <img alt="全屏" src="fullscreen.svg" id="FullScreenBtn" class="FullScreenBtn" width="20" height="20">
     </div>
 
     <div class="interface_wrapper">
       <input class="checkboxes" id="checkbox_controls" type="checkbox" checked><label class="checkboxes_label" for="checkbox_controls">显示详细设置</label>
       <input class="checkboxes" id="checkbox_log" type="checkbox" checked><label class="checkboxes_label" for="checkbox_log">显示识别日志</label>
+      
       <div class="controls_wrapper control_wrapper_row">
-        <div class="control_button_wrapper">
-          <input type="button" value="摄像头 显示/隐藏" onclick="toggleClass('result_video','hidden')">
-          <input type="button" value="摄像头 左右镜像" onclick="toggleClass('result_video','mirror')">
+        <div class="col-12 control_wrapper_col">
+            <div class="control_header">翻译增强设置</div>
+            <div class="control_wrapper">
+                <div class="control_form control_form_slider col-6">
+                    <label for="slider_translate_delay" class="control_label">翻译延迟</label>
+                    <input id="slider_translate_delay" type="range" class="control_input" value="600" min="100" max="3000" step="100" oninput="updateTranslateDelay(this.value)">
+                    <div class="control_value"><span id="value_translate_delay">600</span>ms</div>
+                </div>
+
+                <div class="control_form control_form_selector col-6">
+                    <label for="select_target_lang" class="control_label">翻译目标语言</label>
+                    <select id="select_target_lang" class="control_input" onchange="updateTargetLang(this.value)">
+                        <option value="zh-CN">简体中文</option>
+                        <option value="en">英语 (English)</option>
+                        <option value="ja">日语 (日本語)</option>
+                        <option value="fr">法语 (Français)</option>
+                        <option value="de">德语 (Deutsch)</option>
+                        <option value="es">西班牙语 (Español)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="control_button_wrapper">
           <input type="button" value="文字 显示/隐藏" onclick="toggleClass('text_overlay_wrapper','hidden')">
-          <input type="button" value="文字 左右镜像" onclick="toggleClass('text_overlay_wrapper','mirror')">
           <input type="button" value="全屏按钮 显示/隐藏" onclick="toggleClass('FullScreenBtn','hidden')">
           <input type="button" value="重置设置" onclick="deleteConfig()">
-        </div>
-  
-        <div class="control_selector_wrapper">
-          摄像头：
-          <select id="select_camera" onchange="setupCamera()"></select>
-        </div>
+      </div>
 
         <div class="control_selector_wrapper">
           语音识别:
           <select id="select_language" class="selector" onchange="updateCountry()"></select>
           <select id="select_dialect" class="selector" onchange="updateLanguage()"></select>
-          <span id="checkbox_hiragana_wrapper" class="selector">
+          <span id="checkbox_hiragana_wrapper" class="selector"></span> </div>
+
         <div class="col-12 control_wrapper_col">
           <div class="control_header">文字调整</div>
           <div class="control_wrapper" style="padding-top: 0.8rem;">
             <div class="control_form control_form_slider col-3">
               <label for="slider_font_size" class="control_label">字号</label>
               <input id="slider_font_size" type="range" class="control_input" value="68" min="1" max="150" step="1" oninput="['result_text','translated_text'].forEach(id=>document.getElementById(id).style.fontSize=this.value+'px');document.getElementById('value_font_size').innerHTML=this.value">
-              <div class="control_value">
-                <span id="value_font_size">68</span><span class="value_unit">px</span>
-              </div>
+              <div class="control_value"><span id="value_font_size">68</span><span class="value_unit">px</span></div>
             </div>
 
             <div class="control_form control_form_slider col-3">
               <label for="slider_opacity" class="control_label">透明度</label>
-              <!-- <input id="slider_opacity" type="range" class="control_input" value="0.9" min="0" max="1" step="0.05" oninput="document.getElementById('result_text','translated_text').style.opacity=this.value,document.getElementById('value_opacity').innerHTML=this.value"> -->
-              <input id="slider_opacity" type="range" class="control_input" value="0.9" min="0" max="1" step="0.05" oninput="['result_text','translated_text'].forEach(id=>document.getElementById(id).style.color=this.value)">
-              
-              <div class="control_value">
-                <span id="value_opacity">0.9</span>
-              </div>
+              <input id="slider_opacity" type="range" class="control_input" value="0.9" min="0" max="1" step="0.05" oninput="['result_text','translated_text'].forEach(id=>document.getElementById(id).style.opacity=this.value);document.getElementById('value_opacity').innerHTML=this.value">
+              <div class="control_value"><span id="value_opacity">0.9</span></div>
             </div>
 
             <div class="control_form control_form_radio col-4">
-              <label for="selector_position" class="control_label">位置</label>
+              <label class="control_label">位置</label>
               <div class="control_input">
-                <label for="selector_position_full">
-              <input id="selector_position_full" type="radio" name='selector_position'
-                oninput="document.getElementById('text_overlay_wrapper').classList.add('full'), document.getElementById('text_overlay_wrapper').classList.remove('split','right','left','top','bottom')" checked> 居中
-              </label>
-                <label for="selector_position_left">
-              <input id="selector_position_left" type="radio" name='selector_position'
-                oninput="document.getElementById('text_overlay_wrapper').classList.add('split','left'), document.getElementById('text_overlay_wrapper').classList.remove('full','right','top','bottom')"> 左
-              </label>
-                <label for="selector_position_right">
-              <input id="selector_position_right" type="radio"  name='selector_position'
-                oninput="document.getElementById('text_overlay_wrapper').classList.add('split','right'), document.getElementById('text_overlay_wrapper').classList.remove('full','left','top','bottom')"> 右
-              </label>
-              <label for="selector_position_top">
-              <input id="selector_position_top" type="radio" name='selector_position'
-                oninput="document.getElementById('text_overlay_wrapper').classList.add('split','top'), document.getElementById('text_overlay_wrapper').classList.remove('full','left','right','bottom')"> 上
-              </label>
-              <label for="selector_position_bottom">
-              <input id="selector_position_bottom" type="radio" name='selector_position'
-                oninput="document.getElementById('text_overlay_wrapper').classList.add('split','bottom'), document.getElementById('text_overlay_wrapper').classList.remove('full','left','right','top')"> 下
-              </label>
+                <label><input id="selector_position_full" type="radio" name='selector_position' oninput="document.getElementById('text_overlay_wrapper').classList.add('full'); document.getElementById('text_overlay_wrapper').classList.remove('split','right','left','top','bottom')" checked> 居中</label>
+                <label><input id="selector_position_left" type="radio" name='selector_position' oninput="document.getElementById('text_overlay_wrapper').classList.add('split','left'); document.getElementById('text_overlay_wrapper').classList.remove('full','right','top','bottom')"> 左</label>
+                <label><input id="selector_position_right" type="radio" name='selector_position' oninput="document.getElementById('text_overlay_wrapper').classList.add('split','right'); document.getElementById('text_overlay_wrapper').classList.remove('full','left','top','bottom')"> 右</label>
+                <label><input id="selector_position_top" type="radio" name='selector_position' oninput="document.getElementById('text_overlay_wrapper').classList.add('split','top'); document.getElementById('text_overlay_wrapper').classList.remove('full','left','right','bottom')"> 上</label>
+                <label><input id="selector_position_bottom" type="radio" name='selector_position' oninput="document.getElementById('text_overlay_wrapper').classList.add('split','bottom'); document.getElementById('text_overlay_wrapper').classList.remove('full','left','right','top')"> 下</label>
               </div>
             </div>
 
             <div class="control_form control_form_slider col-3">
               <label for="slider_text_shadow_stroke" class="control_label">阴影</label>
-              <input id="slider_text_shadow_stroke" type="range" class="control_input" value="5" min="0" max="20" step="0.1" oninput="const val=document.getElementById('slider_text_shadow_stroke').value; ['result_text','translated_text'].forEach(id=>document.getElementById(id).style.textShadow='0 0 '+val+'px '+this.value)">
-              <div class="control_value">
-                <span id="value_text_shadow_stroke">5</span><span class="value_unit">px</span>
-              </div>
-            </div>
-
-            <div class="control_form control_form_slider col-3">
-              <label for="slider_text_stroke" class="control_label">描边</label>
-              <input id="slider_text_stroke" type="range" class="control_input" value="0.3" min="0" max="5" step="0.01" oninput="['result_text','translated_text'].forEach(id=>document.getElementById(id).style.webkitTextStrokeWidth=this.value+'px');document.getElementById('value_text_stroke').innerHTML=this.value">
-              <div class="control_value">
-                <span id="value_text_stroke">0.3</span><span class="value_unit">px</span>
-              </div>
-            </div>
-
-            <div class="control_form control_form_slider col-3">
-              <label for="slider_line_height" class="control_label">行间距</label>
-              <input id="slider_line_height" type="range" class="control_input" value="163" min="100" max="300" step="1" oninput="document.querySelectorAll('.text_area').forEach(el=>el.style.lineHeight=this.value+'%'); document.getElementById('value_line_height').innerHTML=this.value">
-              <div class="control_value">
-                <span id="value_line_height">163</span><span class="value_unit">%</span>
-              </div>
-            </div>
-
-            <div class="control_form control_form_slider col-3">
-              <label for="slider_letter_spacing" class="control_label">字间距</label>
-              <input id="slider_letter_spacing" type="range" class="control_input" value="0.05" min="0" max="1" step="0.01" oninput="document.querySelectorAll('.text_area').forEach(el=>el.style.letterSpacing=this.value+'em'); document.getElementById('value_letter_spacing').innerHTML=this.value">
-              <div class="control_value">
-                <span id="value_letter_spacing">0.05</span>
-              </div>
-            </div>
-
-            <div class="control_form control_form_color col-2">
-              <label for="selector_text_color" class="control_label">文字颜色</label>
-              <input id="selector_text_color" type="color" class="control_input" value="#ffffff" oninput="document.querySelectorAll('.text_area').forEach(el=>el.style.color=this.value)">
-            </div>
-
-            <div class="control_form control_form_color col-2">
-              <label for="selector_text_shadow_color" class="control_label">阴影颜色</label>
-              <input id="selector_text_shadow_color" type="color" class="control_input" value="#000000" oninput="const stroke=document.getElementById('slider_text_shadow_stroke').value; document.querySelectorAll('.text_area').forEach(el=>el.style.textShadow='0 0 '+stroke+'px '+this.value)">
-            </div>
-
-            <div class="control_form control_form_color col-2">
-              <label for="selector_text_stroke_color" class="control_label">描边颜色</label>
-              <input id="selector_text_stroke_color" type="color" class="control_input" value="#000000" oninput="document.querySelectorAll('.text_area').forEach(el=>el.style.webkitTextStrokeColor=this.value)">
-            </div>
-
-            <div class="control_form control_form_selector col-3">
-              <label for="select_font" class="control_label">字体</label>
-              <select id="select_font" 
-                onchange="const f=fonts_custom[select_font.selectedIndex]; document.querySelectorAll('.text_area').forEach(el=>{el.style.fontFamily=f[1]; el.style.fontWeight=f[2]})" 
-                style="width: 94%; height: 100%;">
-              </select>
+              <input id="slider_text_shadow_stroke" type="range" class="control_input" value="5" min="0" max="20" step="0.1" oninput="const val=this.value; const color=document.getElementById('selector_text_shadow_color').value; ['result_text','translated_text'].forEach(id=>document.getElementById(id).style.textShadow='0 0 '+val+'px '+color); document.getElementById('value_text_shadow_stroke').innerText=val">
+              <div class="control_value"><span id="value_text_shadow_stroke">5</span><span class="value_unit">px</span></div>
             </div>
 
             <div class="control_form control_form_selector col-2">
               <label for="select_autoclear_text" class="control_label">自动清除</label>
               <select id="select_autoclear_text" onchange="updateTextClearSecond()">
-              <option value="0">从不</option>
-              <option value="5">5秒</option>
-              <option value="10">10秒</option>
-              <option value="20">20秒</option>
-              <option value="30" selected>30秒</option>
-              <option value="45">45秒</option>
-              <option value="60">1分钟</option>
-            </select>
+                <option value="0">从不</option>
+                <option value="5" selected>5秒</option>
+                <option value="10" selected>10秒</option>
+                <option value="60" selected>1分钟</option>
+              </select>
             </div>
           </div>
         </div>
@@ -193,56 +127,29 @@
           <div class="control_wrapper">
             <div class="control_form control_form_slider col-6">
               <label for="slider_text_bg_opacity" class="control_label">背景不透明度</label>
-              <input id="slider_text_bg_opacity" type="range" class="control_input" value="0.3" min="0" max="1" step="0.05" oninput="document.getElementById('text_bg').style.opacity=this.value,document.getElementById('value_text_bg_opacity').innerHTML=this.value">
-              <div class="control_value">
-                <span id="value_text_bg_opacity">0.3</span>
-              </div>
+              <input id="slider_text_bg_opacity" type="range" class="control_input" value="0.3" min="0" max="1" step="0.05" oninput="document.getElementById('text_bg').style.opacity=this.value; document.getElementById('value_text_bg_opacity').innerHTML=this.value">
+              <div class="control_value"><span id="value_text_bg_opacity">0.3</span></div>
             </div>
-
             <div class="control_form control_form_color col-6">
               <label for="selector_text_bg_color" class="control_label">背景颜色</label>
               <input id="selector_text_bg_color" type="color" class="control_input" value="#000000" oninput="document.getElementById('text_bg').style.backgroundColor=this.value">
             </div>
           </div>
         </div>
-
-        <div class="col-6 control_wrapper_col">
-          <div class="control_header">纯色底背景调整</div>
-          <div class="control_wrapper">
-            <div class="control_button_wrapper col-6">
-              <input type="button" id="video_bg_toggle" class="" value="纯色背景 显示/隐藏" onclick="toggleClass('video_bg','hidden')">
-            </div>
-            <div class="control_form control_form_color col-5">
-              <label for="selector_video_bg" class="control_label">背景颜色</label>
-              <input id="selector_video_bg" type="color" class="control_input" value="#00ff00" oninput="document.getElementById('video_bg').style.backgroundColor=this.value">
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="log" class="log_wrapper">
+      </div> <div id="log" class="log_wrapper">
         <div class="control_header">识别结果日志</div>
-        <div class="log_control_wrapper help_text">
-          * 识别结果在确定后会更新到这里。你可以编辑或复制文本。<br/> ** 在识别过程中按下回车键（Enter），可以手动断句。
-          <div class="log_input_wrapper">
-            <label for="checkbox_timestamp">记录时间戳:</label> <input type="checkbox" id="checkbox_timestamp" name="checkbox_timestamp" value="timestamp">
-          </div>
-        </div>
-        <textarea id="result_log" class="result_log_area" onchange="textAreaHeightSet(this)"></textarea><br/>
+        <textarea id="result_log" class="result_log_area"></textarea><br/>
         <div style="text-align: center; opacity: 0.6;">
           <input type="button" value="下载日志" onclick="downloadLogFile(this)">
         </div>
       </div>
-    </div>
-    <div class="help_wrapper">
+    </div> <div class="help_wrapper">
       <div class="help_text">
-        本应用的原始代码来自: <a href="https://github.com/1heisuzuki/speech-to-text-webcam-overlay" target="_blank">鈴木 一平</a><br /> 语音识别使用 <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Speech_API" target="_blank">Web Speech
-          API</a>。<br /> 摄像头或麦克风无法工作时 → 请刷新页面或检查浏览器设置: <a href="https://support.google.com/chrome/answer/2693767?hl=ja">Chrome 帮助</a><br> “下载日志”功能是在您的浏览器本地生成文件的。
+        本应用的原始代码来自: <a href="https://github.com/1heisuzuki/speech-to-text-webcam-overlay" target="_blank">鈴木 一平</a>
       </div>
     </div>
-  </div>
-  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
+  </div> <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js" defer></script>
   <script src="./main.js?v=202210222000" defer></script>
 </body>
-
 </html>
