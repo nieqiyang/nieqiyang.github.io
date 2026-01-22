@@ -298,7 +298,7 @@ function toggleLogVisibility() {
 
 if(selectLang) {
     langs.forEach((l, i) => selectLang.options[i] = new Option(l[0], i));
-    selectLang.selectedIndex = 1; // 默认中文
+    selectLang.selectedIndex = 0; // 默认英文
     selectLang.onchange = updateCountry;
 }
 
