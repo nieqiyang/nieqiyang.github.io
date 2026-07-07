@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>通量塔足迹动态 · JapanFlux2024</title>
+  <link rel="stylesheet" href="vendor/maplibre-gl.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="empty">
+    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+      <circle cx="12" cy="10" r="3"></circle>
+      <path d="M12 2a8 8 0 0 0-8 8c0 5.4 8 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8z"></path>
+    </svg>
+    <div class="big" data-i18n="select_site_prompt"></div>
+  </div>
+
+  <!-- 顶栏 -->
+  <div id="topbar" class="glass">
+    <div class="brand-mark"></div>
+    <div class="brand">
+      <div class="title" data-i18n="title"></div>
+      <div class="subtitle" data-i18n="subtitle"></div>
+    </div>
+    <div id="lang">
+      <button data-lang="zh">中</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="ja">日</button>
+    </div>
+  </div>
+
+  <button id="info-btn" title="method">ⓘ</button>
+
+  <!-- 左侧站点列表 -->
+  <div id="sidebar" class="glass">
+    <div class="sb-head">
+      <h2 data-i18n="sites"></h2>
+      <input id="search" type="text" data-i18n-ph="search_site" />
+    </div>
+    <div id="site-list"></div>
+  </div>
+
+  <!-- 右侧信息 / 指标 -->
+  <div id="rightpanel">
+    <div class="card glass" id="info-card" style="display:none">
+      <h3 data-i18n="site_info"></h3>
+      <div class="kv"><span class="k" data-i18n="land_use"></span><span class="v" id="v-land"></span></div>
+      <div class="kv"><span class="k" data-i18n="wind_height"></span><span class="v" id="v-zm"></span></div>
+      <div class="kv"><span class="k" data-i18n="data_span"></span><span class="v" id="v-years"></span></div>
+      <div class="kv"><span class="k" data-i18n="records"></span><span class="v" id="v-n"></span></div>
+      <div class="kv" style="margin-top:4px"><span class="k"></span><span class="v" id="v-sigv"></span></div>
+    </div>
+
+    <div class="card glass" id="metric-card" style="display:none">
+      <h3 data-i18n="metrics"></h3>
+      <div class="metric-grid">
+        <div class="metric"><div class="m-val" id="m-peak">–</div><div class="m-lab" data-i18n="peak_dist"></div></div>
+        <div class="metric"><div class="m-val" id="m-bear">–</div><div class="m-lab" data-i18n="peak_bearing"></div></div>
+        <div class="metric"><div class="m-val" id="m-r80">–</div><div class="m-lab" data-i18n="r80_extent"></div></div>
+        <div class="metric"><div class="m-val" id="m-nused">–</div><div class="m-lab" data-i18n="n_used"></div></div>
+      </div>
+    </div>
+
+    <div class="card glass" id="rose-card" style="display:none">
+      <h3 id="rose-title"></h3>
+      <div id="rose-wrap"><canvas id="rose" width="400" height="400"></canvas></div>
+    </div>
+
+    <div class="card glass" id="legend-card" style="display:none">
+      <h3 data-i18n="legend"></h3>
+      <div class="legend-grad" id="legend-grad"></div>
+      <div class="legend-scale"><span>10%</span><span>40%</span><span>80%</span></div>
+      <div class="legend-note" data-i18n="animating_wind"></div>
+    </div>
+  </div>
+
+  <!-- 底部时间控制 -->
+  <div id="bottombar" class="glass" style="display:none">
+    <div class="mode-tabs" id="mode-tabs">
+      <button data-mode="year" data-i18n="mode_year"></button>
+      <button data-mode="quarter" data-i18n="mode_quarter"></button>
+      <button data-mode="month" class="active" data-i18n="mode_month"></button>
+      <button data-mode="inst" data-i18n="mode_inst"></button>
+    </div>
+    <div class="timeline-row">
+      <button id="step-prev" class="step-btn" title="prev">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 6l-6 6 6 6V6z"/></svg>
+      </button>
+      <button id="play" title="play">
+        <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button id="step-next" class="step-btn" title="next">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l6 6-6 6V6z"/></svg>
+      </button>
+      <div class="tl-main">
+        <div class="tl-label"><span class="cur" id="tl-cur"></span><span class="hint" id="tl-hint"></span></div>
+        <input id="slider" type="range" min="0" max="11" value="0" step="1" />
+        <div class="tl-ticks" id="tl-ticks"></div>
+      </div>
+      <div id="speed-wrap">
+        <span data-i18n="speed"></span>
+        <input id="speed" type="range" min="1" max="8" value="4" step="1" />
+      </div>
+    </div>
+  </div>
+
+  <div id="basemap-ctrl" class="glass">
+    <button data-bm="sat" class="active" data-i18n="sat"></button>
+    <button data-bm="dark" data-i18n="dark"></button>
+    <button data-bm="light" data-i18n="light"></button>
+  </div>
+
+  <div id="toast" class="glass"></div>
+
+  <!-- 方法说明 -->
+  <div id="modal-bg">
+    <div id="modal" class="glass">
+      <h3 data-i18n="method_title"></h3>
+      <p data-i18n="method_body"></p>
+      <div class="ref">Kljun, N., Calanca, P., Rotach, M.W., Schmid, H.P. (2015).
+        <i>Geosci. Model Dev.</i> 8, 3695–3713. doi:10.5194/gmd-8-3695-2015</div>
+      <button id="modal-close" data-i18n="close"></button>
+    </div>
+  </div>
+
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="js/ffp.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
