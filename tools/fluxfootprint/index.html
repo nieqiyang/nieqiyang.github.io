@@ -42,11 +42,23 @@
     </div>
     <div id="site-list"></div>
   </div>
+  <!-- 左栏折叠按钮 -->
+  <button id="sidebar-toggle" class="panel-toggle glass" title="collapse">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+
+  <!-- 右栏折叠按钮 -->
+  <button id="rp-toggle" class="panel-toggle glass" title="collapse">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
 
   <!-- 右侧信息 / 指标 -->
   <div id="rightpanel">
     <div class="card glass" id="info-card" style="display:none">
-      <h3 data-i18n="site_info"></h3>
+      <div class="site-name-block">
+        <div class="sn-name" id="v-sitename"></div>
+        <div class="sn-code" id="v-sitecode"></div>
+      </div>
       <div class="kv"><span class="k" data-i18n="land_use"></span><span class="v" id="v-land"></span></div>
       <div class="kv"><span class="k" data-i18n="wind_height"></span><span class="v" id="v-zm"></span></div>
       <div class="kv"><span class="k" data-i18n="data_span"></span><span class="v" id="v-years"></span></div>
@@ -129,6 +141,7 @@
   <script src="vendor/maplibre-gl.js"></script>
   <script src="js/ffp.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/sitenames.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

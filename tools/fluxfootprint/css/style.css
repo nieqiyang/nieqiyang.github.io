@@ -75,6 +75,7 @@ body {
 #sidebar {
   position: absolute; top: 84px; left: 16px; bottom: 16px; width: 288px; z-index: 9;
   display: flex; flex-direction: column; overflow: hidden;
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
 }
 #sidebar .sb-head { padding: 14px 16px 10px; }
 #sidebar .sb-head h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
@@ -102,14 +103,46 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .site-item .si-zm { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
+/* ---------- 面板折叠按钮 ---------- */
+.panel-toggle {
+  position: absolute; z-index: 10; width: 26px; height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer; color: var(--text-dim);
+  border-radius: 9px; background: var(--panel);
+  transition: left .32s cubic-bezier(.4,0,.2,1), right .32s cubic-bezier(.4,0,.2,1),
+    color .18s, background .18s;
+}
+.panel-toggle:hover { color: var(--text); background: var(--panel-solid); }
+.panel-toggle svg { width: 18px; height: 18px; transition: transform .32s; }
+
+/* 左栏切换：贴在侧栏右缘，收起后移到窗口左缘 */
+#sidebar-toggle { top: 100px; left: 312px; }               /* 16 + 288 + 8 */
+body.sb-collapsed #sidebar { transform: translateX(calc(-100% - 24px)); }
+body.sb-collapsed #sidebar-toggle { left: 12px; }
+body.sb-collapsed #sidebar-toggle svg { transform: rotate(180deg); }
+
+/* 右栏切换：贴在右栏左缘，收起后移到窗口右缘；仅选中站点后出现 */
+#rp-toggle { top: 100px; right: 300px; display: none; }    /* 16 + 268 + 16 */
+body.has-site #rp-toggle { display: flex; }
+body.rp-collapsed #rightpanel { transform: translateX(calc(100% + 24px)); }
+body.rp-collapsed #rp-toggle { right: 12px; }
+body.rp-collapsed #rp-toggle svg { transform: rotate(180deg); }
+
 /* ---------- 右侧信息 / 指标面板 ---------- */
 #rightpanel {
   position: absolute; top: 84px; right: 16px; width: 268px; z-index: 9;
   display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 200px);
   overflow-y: auto;
+  transition: transform .32s cubic-bezier(.4,0,.2,1);
 }
 #rightpanel::-webkit-scrollbar { width: 0; }
 .card { padding: 15px 16px; }
+
+/* 站点名称块（信息卡片顶部） */
+.site-name-block { margin-bottom: 12px; }
+.site-name-block .sn-name { font-size: 15px; font-weight: 650; line-height: 1.3; }
+.site-name-block .sn-code { font-size: 11.5px; color: var(--accent); font-weight: 600;
+  letter-spacing: .4px; margin-top: 3px; font-variant-numeric: tabular-nums; }
 .card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1.1px;
   color: var(--text-dim); font-weight: 600; margin-bottom: 12px; }
 .kv { display: flex; justify-content: space-between; align-items: baseline;

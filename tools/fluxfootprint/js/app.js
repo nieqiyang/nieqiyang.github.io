@@ -31,6 +31,17 @@ const T = () => I18N[S.lang];
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
+// 站点名称：日文界面优先显示日名（缺失回退英名），其他语言用英名
+function siteName(id){
+  const n = (typeof SITE_NAMES!=='undefined') ? SITE_NAMES[id] : null;
+  if (!n) return id;
+  return (S.lang==='ja' && n.ja) ? n.ja : n.en;
+}
+function siteCode(id){
+  const n = (typeof SITE_NAMES!=='undefined') ? SITE_NAMES[id] : null;
+  return (n && n.code) ? n.code : id;
+}
+
 // ================= 地图初始化 =================
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const ESRI_REF = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
@@ -128,14 +139,16 @@ function buildSiteList(filter=''){
   const f = filter.trim().toLowerCase();
   S.manifest.sites.forEach(s => {
     const luName = (T().landuse[s.land_use]||s.land_use);
-    if (f && !(s.id.toLowerCase().includes(f) || luName.toLowerCase().includes(f)
+    const name = siteName(s.id), code = siteCode(s.id);
+    if (f && !(name.toLowerCase().includes(f) || code.toLowerCase().includes(f)
+        || s.id.toLowerCase().includes(f) || luName.toLowerCase().includes(f)
         || s.land_use.toLowerCase().includes(f))) return;
     const el = document.createElement('div');
     el.className = 'site-item' + (S.site&&S.site.id===s.id?' active':'');
     el.dataset.id = s.id;
     el.innerHTML = `<span class="chip" style="background:${LU_COLOR[s.land_use]||'#fff'}"></span>
-      <div class="si-main"><div class="si-id">${s.id.replace('A2024','')}</div>
-      <div class="si-sub">${luName}${s.sigmav_source==='parameterized'?' · σv*':''}</div></div>
+      <div class="si-main"><div class="si-id" title="${name}">${name}</div>
+      <div class="si-sub">${code} · ${luName}${s.sigmav_source==='parameterized'?' · σv*':''}</div></div>
       <div class="si-zm">${s.zm}m</div>`;
     el.onclick = ()=> selectSite(s.id);
     list.appendChild(el);
@@ -151,6 +164,7 @@ async function selectSite(id){
   S.ts = null; S.idx = 0;
   $$('.site-item').forEach(e=> e.classList.toggle('active', e.dataset.id===id));
   $('#empty').style.display='none';
+  document.body.classList.add('has-site');
   ['#info-card','#metric-card','#rose-card','#legend-card','#bottombar'].forEach(s=>$(s).style.display='');
   updateInfoCard();
   addTowerMarker();
@@ -163,6 +177,8 @@ async function selectSite(id){
 
 function updateInfoCard(){
   const s=S.site, t=T();
+  $('#v-sitename').textContent = siteName(s.id);
+  $('#v-sitecode').textContent = siteCode(s.id);
   $('#v-land').textContent = (t.landuse[s.land_use]||s.land_use)+` (${s.land_use})`;
   $('#v-zm').textContent = s.zm+' m';
   $('#v-years').textContent = s.year_start+'–'+s.year_end;
@@ -463,6 +479,9 @@ function bindUI(){
   $('#legend-grad').style.background=`linear-gradient(90deg,${grad})`;
   // 底图切换
   $$('#basemap-ctrl button').forEach(b=> b.onclick=()=>setBasemap(b.dataset.bm));
+  // 面板折叠
+  $('#sidebar-toggle').onclick = ()=> document.body.classList.toggle('sb-collapsed');
+  $('#rp-toggle').onclick = ()=> document.body.classList.toggle('rp-collapsed');
 }
 
 const BASEMAPS = {
