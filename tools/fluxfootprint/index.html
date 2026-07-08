@@ -64,6 +64,11 @@
       <div class="kv"><span class="k" data-i18n="data_span"></span><span class="v" id="v-years"></span></div>
       <div class="kv"><span class="k" data-i18n="records"></span><span class="v" id="v-n"></span></div>
       <div class="kv" style="margin-top:4px"><span class="k"></span><span class="v" id="v-sigv"></span></div>
+      <div class="gpp-annual" id="gpp-annual" style="display:none">
+        <div class="gpp-annual-head" data-i18n="gpp"></div>
+        <div class="kv" id="row-gpp-dt"><span class="k"><span class="gpp-dot dt"></span><span data-i18n="gpp_dt"></span></span><span class="v" id="v-gpp-dt"></span></div>
+        <div class="kv" id="row-gpp-nt"><span class="k"><span class="gpp-dot nt"></span><span data-i18n="gpp_nt"></span></span><span class="v" id="v-gpp-nt"></span></div>
+      </div>
     </div>
 
     <div class="card glass" id="metric-card" style="display:none">
@@ -73,6 +78,17 @@
         <div class="metric"><div class="m-val" id="m-bear">–</div><div class="m-lab" data-i18n="peak_bearing"></div></div>
         <div class="metric"><div class="m-val" id="m-r80">–</div><div class="m-lab" data-i18n="r80_extent"></div></div>
         <div class="metric"><div class="m-val" id="m-nused">–</div><div class="m-lab" data-i18n="n_used"></div></div>
+      </div>
+    </div>
+
+    <div class="card glass" id="gpp-card" style="display:none">
+      <h3 data-i18n="gpp_diurnal"></h3>
+      <div id="gpp-day"></div>
+      <div id="gpp-wrap"><canvas id="gpp-chart" width="480" height="260"></canvas></div>
+      <div class="gpp-legend">
+        <span><span class="gpp-dot dt"></span><span data-i18n="gpp_dt"></span></span>
+        <span><span class="gpp-dot nt"></span><span data-i18n="gpp_nt"></span></span>
+        <span class="gpp-unit" data-i18n="gpp_unit_flux"></span>
       </div>
     </div>
 

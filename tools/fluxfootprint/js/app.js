@@ -161,15 +161,15 @@ async function selectSite(id){
   const site = await fetchJSONRetry(`data/${id}.json`, 4);
   if (!site){ toast(T().no_data); return; }
   S.site = site;
-  S.ts = null; S.idx = 0;
+  S.ts = null; S.gpp = null; S.idx = 0;
   $$('.site-item').forEach(e=> e.classList.toggle('active', e.dataset.id===id));
   $('#empty').style.display='none';
   document.body.classList.add('has-site');
   ['#info-card','#metric-card','#rose-card','#legend-card','#bottombar'].forEach(s=>$(s).style.display='');
   updateInfoCard();
   addTowerMarker();
-  // 若当前是 inst 模式，先加载时间序列
-  if (S.mode==='inst') await ensureTS();
+  // 若当前是 inst 模式，先加载时间序列与 GPP
+  if (S.mode==='inst'){ await ensureTS(); await ensureGPP(); }
   setupTimeline();
   render();
   fitToSite();
@@ -186,6 +186,20 @@ function updateInfoCard(){
   const b=$('#v-sigv');
   if (s.sigmav_source==='measured'){ b.className='badge measured'; b.textContent=t.sigmav_measured; }
   else { b.className='badge param'; b.textContent=t.sigmav_param; }
+  updateGPPAnnual();
+}
+
+// 年 GPP（日间法/夜间法），单位 gC m⁻²yr⁻¹
+function updateGPPAnnual(){
+  const g=S.site&&S.site.gpp, t=T();
+  const block=$('#gpp-annual');
+  if (!g || (g.dt==null && g.nt==null)){ block.style.display='none'; return; }
+  block.style.display='';
+  const fmt = v => v==null ? '–' : `${Math.round(v).toLocaleString()}<small>${t.gpp_unit_year}</small>`;
+  $('#row-gpp-dt').style.display = g.dt==null?'none':'';
+  $('#row-gpp-nt').style.display = g.nt==null?'none':'';
+  $('#v-gpp-dt').innerHTML = fmt(g.dt);
+  $('#v-gpp-nt').innerHTML = fmt(g.nt);
 }
 
 function addTowerMarker(){
@@ -271,9 +285,14 @@ function fmtPeriod(t){
   return t;
 }
 
+// 时间戳按站点当地时间存储（在 .ts 中当作 UTC），用 UTC 取值还原站点挂钟时间
 function fmtDate(d){
   const p=n=>String(n).padStart(2,'0');
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+function fmtDay(d){
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`;
 }
 
 function currentPeriodData(){
@@ -286,6 +305,7 @@ function currentPeriodData(){
 function render(){
   updateTLLabel();
   if (S.mode==='inst'){ renderInst(); return; }
+  $('#gpp-card').style.display='none';   // 日变化曲线仅单次模式
   const per=currentPeriodData();
   if (!per || !per.contours.length){ map.getSource('footprint').setData(emptyFC()); clearMetrics(); toast(T().no_data); return; }
   const fc={ type:'FeatureCollection', features:[] };
@@ -321,11 +341,88 @@ async function ensureTS(){
   S.ts={ id:S.site.id, arr, N, dates };
 }
 
+// 载入半小时 GPP 网格（int16 交错 [DT,NT]，值/100，缺测=-32768）
+async function ensureGPP(){
+  const g = S.site && S.site.gpp;
+  if (!g){ S.gpp=null; return; }
+  if (S.gpp && S.gpp.id===S.site.id) return;
+  try {
+    const buf=await (await fetch(`data/${S.site.id}.gpp.i16`, {cache:'no-store'})).arrayBuffer();
+    S.gpp={ id:S.site.id, arr:new Int16Array(buf), t0:g.t0, n:g.n };
+  } catch(e){ S.gpp=null; }
+}
+
+// 当日（0:00–23:30）GPP 日变化曲线
+function drawGPP(){
+  const card=$('#gpp-card');
+  const has = S.mode==='inst' && S.site && S.site.gpp && S.ts;
+  card.style.display = has ? '' : 'none';
+  if (!has) return;
+  const t=T(), tMin=S.ts.arr[S.idx*7]; // 当前记录 epoch 分钟
+  const dayStart=Math.floor(tMin/1440)*1440;
+  $('#gpp-day').textContent = fmtDay(new Date(dayStart*60000));
+  const cv=$('#gpp-chart'), ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  const dt=new Array(48).fill(null), nt=new Array(48).fill(null);
+  let any=false;
+  if (S.gpp){
+    const i0=(dayStart - S.gpp.t0)/30;
+    if (Number.isInteger(i0)){
+      for(let k=0;k<48;k++){
+        const si=i0+k; if(si<0||si>=S.gpp.n) continue;
+        const a=S.gpp.arr[si*2], b=S.gpp.arr[si*2+1];
+        if(a!==-32768){ dt[k]=a/100; any=true; }
+        if(b!==-32768){ nt[k]=b/100; any=true; }
+      }
+    }
+  }
+  const padL=34, padR=8, padT=10, padB=20;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  if(!any){ ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(t.no_gpp_day, W/2, H/2); return; }
+  // y 轴范围
+  let vmax=0, vmin=0;
+  [...dt,...nt].forEach(v=>{ if(v!=null){ if(v>vmax)vmax=v; if(v<vmin)vmin=v; } });
+  vmax=Math.ceil((vmax*1.1)/5)*5||5; vmin=Math.min(0,Math.floor(vmin/5)*5);
+  const X=k=> padL + (k/47)*plotW;
+  const Y=v=> padT + (1-(v-vmin)/(vmax-vmin))*plotH;
+  // 网格 + y 刻度
+  ctx.strokeStyle='rgba(255,255,255,0.10)'; ctx.fillStyle='rgba(255,255,255,0.45)';
+  ctx.font='9px sans-serif'; ctx.lineWidth=1;
+  const yStep = vmax-vmin<=10?2:(vmax-vmin<=25?5:10);
+  for(let v=vmin; v<=vmax+0.01; v+=yStep){
+    const y=Y(v); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.textAlign='right'; ctx.fillText(String(v), padL-4, y+3);
+  }
+  // x 刻度（0,6,12,18,24 时）
+  ctx.textAlign='center';
+  [0,6,12,18,24].forEach(h=>{ const x=X(h*2); ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillText(h+'h', Math.min(Math.max(x,padL+6),W-padR-6), H-6); });
+  // 当前时刻竖线
+  const curK=(tMin-dayStart)/30;
+  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(X(curK),padT); ctx.lineTo(X(curK),padT+plotH); ctx.stroke();
+  ctx.setLineDash([]);
+  // 画线（NaN 处断开）
+  const line=(arr,color)=>{
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round';
+    let started=false; ctx.beginPath();
+    for(let k=0;k<48;k++){ if(arr[k]==null){ started=false; continue; }
+      const x=X(k), y=Y(arr[k]);
+      if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y); }
+    ctx.stroke();
+  };
+  line(nt, getCSS('--accent-2')||'#ffb74d');
+  line(dt, getCSS('--accent')||'#4dd0e1');
+}
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
 let instPending=null;
 function renderInst(){
   if(!S.ts) return;
   updateRoseTitle();
   drawInstNeedleCurrent();     // 即时更新风向指针（不必等 worker）
+  drawGPP();
   const i=S.idx, a=S.ts.arr;
   const inp={ zm:S.site.zm, umean:a[i*7+1], ustar:a[i*7+2], ol:a[i*7+3],
     sigmav:a[i*7+4], wd:a[i*7+5], h:a[i*7+6] };
@@ -507,7 +604,7 @@ async function setMode(m){
   if(m===S.mode) return; stopPlay(); S.mode=m; S.idx=0;
   $$('#mode-tabs button').forEach(b=> b.classList.toggle('active', b.dataset.mode===m));
   if(!S.site) return;
-  if(m==='inst') await ensureTS();
+  if(m==='inst'){ await ensureTS(); await ensureGPP(); }
   setupTimeline(); render();
 }
 
@@ -520,7 +617,7 @@ function setLang(l){
   if(S.manifest) buildSiteList($('#search').value);
   updateRoseTitle();
   if(S.site){ updateInfoCard(); setupTimeline();
-    if(S.mode==='inst'){ drawInstNeedleCurrent(); }
+    if(S.mode==='inst'){ drawInstNeedleCurrent(); drawGPP(); }
     else { const per=currentPeriodData(); if(per) drawRose(per.rose); }
   }
 }
