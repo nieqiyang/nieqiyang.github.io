@@ -120,14 +120,17 @@ function applyURLParams(){
 // 在总览图上标出所有塔
 function addTowerDots(){
   const fc = { type:'FeatureCollection', features: S.manifest.sites.map(s => ({
-    type:'Feature', properties:{ id:s.id, color: LU_COLOR[s.land_use]||'#fff' },
+    type:'Feature', properties:{ id:s.id, color: LU_COLOR[s.land_use]||'#fff', nf: !!s.no_footprint },
     geometry:{ type:'Point', coordinates:[s.lon, s.lat] } })) };
   if (map.getSource('towers')) { map.getSource('towers').setData(fc); return; }
   map.addSource('towers', { type:'geojson', data:fc });
+  // 无足迹站点画成空心环，足迹站点为实心点
   map.addLayer({ id:'towers', type:'circle', source:'towers', paint:{
     'circle-radius':['interpolate',['linear'],['zoom'],4,3,10,5],
-    'circle-color':['get','color'], 'circle-stroke-width':1.5,
-    'circle-stroke-color':'rgba(0,0,0,0.6)', 'circle-opacity':0.9 } });
+    'circle-color':['case',['get','nf'],'rgba(0,0,0,0)',['get','color']],
+    'circle-stroke-width':['case',['get','nf'],2,1.5],
+    'circle-stroke-color':['case',['get','nf'],['get','color'],'rgba(0,0,0,0.6)'],
+    'circle-opacity':0.9 } });
   map.on('click','towers', e => selectSite(e.features[0].properties.id));
   map.on('mouseenter','towers', ()=> map.getCanvas().style.cursor='pointer');
   map.on('mouseleave','towers', ()=> map.getCanvas().style.cursor='');
@@ -144,11 +147,17 @@ function buildSiteList(filter=''){
         || s.id.toLowerCase().includes(f) || luName.toLowerCase().includes(f)
         || s.land_use.toLowerCase().includes(f))) return;
     const el = document.createElement('div');
-    el.className = 'site-item' + (S.site&&S.site.id===s.id?' active':'');
+    const nf = !!s.no_footprint;
+    el.className = 'site-item' + (S.site&&S.site.id===s.id?' active':'') + (nf?' nofp':'');
     el.dataset.id = s.id;
-    el.innerHTML = `<span class="chip" style="background:${LU_COLOR[s.land_use]||'#fff'}"></span>
+    const color = LU_COLOR[s.land_use]||'#fff';
+    const chip = nf ? `<span class="chip" style="background:transparent;box-shadow:inset 0 0 0 2px ${color}"></span>`
+                    : `<span class="chip" style="background:${color}"></span>`;
+    const tag = nf ? ` · <span class="si-nofp">${T().nofp_tag}</span>`
+                   : (s.sigmav_source==='parameterized'?' · σv*':'');
+    el.innerHTML = `${chip}
       <div class="si-main"><div class="si-id" title="${name}">${name}</div>
-      <div class="si-sub">${code} · ${luName}${s.sigmav_source==='parameterized'?' · σv*':''}</div></div>
+      <div class="si-sub">${code} · ${luName}${tag}</div></div>
       <div class="si-zm">${s.zm}m</div>`;
     el.onclick = ()=> selectSite(s.id);
     list.appendChild(el);
@@ -161,18 +170,77 @@ async function selectSite(id){
   const site = await fetchJSONRetry(`data/${id}.json`, 4);
   if (!site){ toast(T().no_data); return; }
   S.site = site;
-  S.ts = null; S.gpp = null; S.idx = 0;
+  S.ts = null; S.gpp = null; S.gppDays = null; S.idx = 0;
   $$('.site-item').forEach(e=> e.classList.toggle('active', e.dataset.id===id));
   $('#empty').style.display='none';
   document.body.classList.add('has-site');
-  ['#info-card','#metric-card','#rose-card','#legend-card','#bottombar'].forEach(s=>$(s).style.display='');
+  const nf = !!site.no_footprint;
+  document.body.classList.toggle('no-fp', nf);
   updateInfoCard();
+  updateStatusCard();
   addTowerMarker();
-  // 若当前是 inst 模式，先加载时间序列与 GPP
+
+  if (nf){
+    // ── 无足迹站点：只展示信息 + 数据说明（+ 有 GPP 时的日 GPP 曲线）──
+    S.mode = 'gppday';
+    $('#info-card').style.display=''; $('#status-card').style.display='';
+    ['#metric-card','#rose-card','#legend-card'].forEach(s=>$(s).style.display='none');
+    map.getSource('footprint').setData(emptyFC());
+    await ensureGPP();
+    buildGppDays();
+    if (site.gpp && S.gppDays && S.gppDays.length){
+      $('#bottombar').style.display=''; setupTimeline(); render();
+    } else {
+      $('#bottombar').style.display='none'; $('#gpp-card').style.display='none';
+    }
+    map.flyTo({ center:[site.lon,site.lat], zoom:13, duration:900 });
+    return;
+  }
+
+  // ── 足迹站点：常规流程 ──
+  if (S.mode==='gppday') S.mode='month';
+  $('#status-card').style.display='none';
+  ['#info-card','#metric-card','#rose-card','#legend-card','#bottombar'].forEach(s=>$(s).style.display='');
+  $$('#mode-tabs button').forEach(b=> b.classList.toggle('active', b.dataset.mode===S.mode));
   if (S.mode==='inst'){ await ensureTS(); await ensureGPP(); }
   setupTimeline();
   render();
   fitToSite();
+}
+
+// 数据说明卡片（无足迹站点：说明缺哪些变量、是否有 GPP）
+function updateStatusCard(){
+  const s=S.site, t=T(), card=$('#status-card');
+  if (!s || !s.no_footprint){ card.style.display='none'; return; }
+  const miss=(s.missing||[]);
+  const fp = miss.length ? (t.no_fp_missing + miss.map(m=>t['var_'+m]||m).join('、'))
+                         : t.no_fp_insufficient;
+  $('#status-fp').textContent = '⚠ '+fp;
+  const g=$('#status-gpp');
+  if (s.gpp){ g.style.display='none'; g.textContent=''; }
+  else { g.style.display=''; g.textContent = '· '+t.no_gpp; }
+}
+
+// 从 GPP 网格提取有数据的整日（用于无足迹站点的日 GPP 滚动）
+function buildGppDays(){
+  S.gppDays=null;
+  const g=S.site&&S.site.gpp;
+  if (!g || !S.gpp) return;
+  const days=[], nDay=Math.ceil(S.gpp.n/48);
+  for (let d=0; d<nDay; d++){
+    let has=false;
+    for (let k=0;k<48;k++){ const si=d*48+k; if(si>=S.gpp.n) break;
+      if (S.gpp.arr[si*2]!==-32768 || S.gpp.arr[si*2+1]!==-32768){ has=true; break; } }
+    if (has) days.push(g.t0 + d*1440);
+  }
+  S.gppDays = days;
+}
+
+// 当前"当日"起点（epoch 分钟）：inst 由记录推出，gppday 由日列表给出
+function currentDayStart(){
+  if (S.mode==='gppday') return (S.gppDays && S.gppDays.length)? S.gppDays[S.idx] : null;
+  if (S.mode==='inst' && S.ts) return Math.floor(S.ts.arr[S.idx*7]/1440)*1440;
+  return null;
 }
 
 function updateInfoCard(){
@@ -181,11 +249,19 @@ function updateInfoCard(){
   $('#v-sitecode').textContent = siteCode(s.id);
   $('#v-land').textContent = (t.landuse[s.land_use]||s.land_use)+` (${s.land_use})`;
   $('#v-zm').textContent = s.zm+' m';
-  $('#v-years').textContent = s.year_start+'–'+s.year_end;
-  $('#v-n').textContent = s.n_valid.toLocaleString();
-  const b=$('#v-sigv');
-  if (s.sigmav_source==='measured'){ b.className='badge measured'; b.textContent=t.sigmav_measured; }
-  else { b.className='badge param'; b.textContent=t.sigmav_param; }
+  // 数据年份：足迹站点或有 GPP 网格年份时显示
+  if (s.year_start!=null){ $('#row-years').style.display=''; $('#v-years').textContent = s.year_start+'–'+s.year_end; }
+  else { $('#row-years').style.display='none'; }
+  // 有效记录 / σv 徽标：仅足迹站点
+  if (s.no_footprint){
+    $('#row-records').style.display='none'; $('#row-sigv').style.display='none';
+  } else {
+    $('#row-records').style.display=''; $('#row-sigv').style.display='';
+    $('#v-n').textContent = s.n_valid.toLocaleString();
+    const b=$('#v-sigv');
+    if (s.sigmav_source==='measured'){ b.className='badge measured'; b.textContent=t.sigmav_measured; }
+    else { b.className='badge param'; b.textContent=t.sigmav_param; }
+  }
   updateGPPAnnual();
 }
 
@@ -238,7 +314,19 @@ function currentSeries(){
 function setupTimeline(){
   const slider=$('#slider'), ticks=$('#tl-ticks');
   $('#play').style.display='';
-  if (S.mode==='inst'){
+  if (S.mode==='gppday'){
+    const days=S.gppDays||[];
+    slider.min=0; slider.max=Math.max(0,days.length-1); slider.step=1;
+    if (S.idx>days.length-1) S.idx=0; slider.value=S.idx;
+    // 稀疏年份刻度
+    ticks.innerHTML='';
+    if (days.length){ const want=Math.min(6,days.length);
+      for(let k=0;k<want;k++){ const i=Math.round(k*(days.length-1)/(want-1||1));
+        const sp=document.createElement('span');
+        sp.textContent=String(new Date(days[i]*60000).getUTCFullYear()); ticks.appendChild(sp); } }
+    $('#tl-hint').textContent = days.length
+      ? `${fmtDay(new Date(days[0]*60000))} – ${fmtDay(new Date(days[days.length-1]*60000))}` : T().no_data;
+  } else if (S.mode==='inst'){
     const N = S.ts ? S.ts.N : 1;
     slider.min=0; slider.max=Math.max(0,N-1); slider.step=1;
     if (S.idx>N-1) S.idx=0; slider.value=S.idx;
@@ -269,6 +357,7 @@ function buildTicks(arr){
 
 function updateTLLabel(){
   const cur=$('#tl-cur');
+  if (S.mode==='gppday'){ const d=currentDayStart(); cur.textContent = d!=null? fmtDay(new Date(d*60000)) : '–'; return; }
   if (S.mode==='inst'){ if(S.ts){ cur.textContent=fmtDate(S.ts.dates[S.idx]); } return; }
   const arr=currentSeries();
   cur.textContent = arr[S.idx] ? fmtPeriod(arr[S.idx].t) : '–';
@@ -305,7 +394,8 @@ function currentPeriodData(){
 function render(){
   updateTLLabel();
   if (S.mode==='inst'){ renderInst(); return; }
-  $('#gpp-card').style.display='none';   // 日变化曲线仅单次模式
+  if (S.mode==='gppday'){ drawGPP(); return; }   // 无足迹站点：仅画日 GPP 曲线
+  $('#gpp-card').style.display='none';   // 日变化曲线仅单次/日GPP模式
   const per=currentPeriodData();
   if (!per || !per.contours.length){ map.getSource('footprint').setData(emptyFC()); clearMetrics(); toast(T().no_data); return; }
   const fc={ type:'FeatureCollection', features:[] };
@@ -355,11 +445,12 @@ async function ensureGPP(){
 // 当日（0:00–23:30）GPP 日变化曲线
 function drawGPP(){
   const card=$('#gpp-card');
-  const has = S.mode==='inst' && S.site && S.site.gpp && S.ts;
+  const dayStart = currentDayStart();
+  const has = S.site && S.site.gpp && (S.mode==='inst'||S.mode==='gppday') && dayStart!=null;
   card.style.display = has ? '' : 'none';
   if (!has) return;
-  const t=T(), tMin=S.ts.arr[S.idx*7]; // 当前记录 epoch 分钟
-  const dayStart=Math.floor(tMin/1440)*1440;
+  const t=T();
+  const tMin = (S.mode==='inst' && S.ts) ? S.ts.arr[S.idx*7] : null; // 当前时刻(仅 inst)
   $('#gpp-day').textContent = fmtDay(new Date(dayStart*60000));
   const cv=$('#gpp-chart'), ctx=cv.getContext('2d'), W=cv.width, H=cv.height;
   ctx.clearRect(0,0,W,H);
@@ -398,11 +489,13 @@ function drawGPP(){
   ctx.textAlign='center';
   [0,6,12,18,24].forEach(h=>{ const x=X(h*2); ctx.fillStyle='rgba(255,255,255,0.4)';
     ctx.fillText(h+'h', Math.min(Math.max(x,padL+6),W-padR-6), H-6); });
-  // 当前时刻竖线
-  const curK=(tMin-dayStart)/30;
-  ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(X(curK),padT); ctx.lineTo(X(curK),padT+plotH); ctx.stroke();
-  ctx.setLineDash([]);
+  // 当前时刻竖线（仅单次模式有具体时刻）
+  if (tMin!=null){
+    const curK=(tMin-dayStart)/30;
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(X(curK),padT); ctx.lineTo(X(curK),padT+plotH); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   // 画线（NaN 处断开）
   const line=(arr,color)=>{
     ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round';
@@ -616,8 +709,9 @@ function setLang(l){
   $('#step-prev').title=T().step_prev; $('#step-next').title=T().step_next; $('#play').title=T().play;
   if(S.manifest) buildSiteList($('#search').value);
   updateRoseTitle();
-  if(S.site){ updateInfoCard(); setupTimeline();
+  if(S.site){ updateInfoCard(); updateStatusCard(); setupTimeline();
     if(S.mode==='inst'){ drawInstNeedleCurrent(); drawGPP(); }
+    else if(S.mode==='gppday'){ drawGPP(); }
     else { const per=currentPeriodData(); if(per) drawRose(per.rose); }
   }
 }

@@ -61,14 +61,20 @@
       </div>
       <div class="kv"><span class="k" data-i18n="land_use"></span><span class="v" id="v-land"></span></div>
       <div class="kv"><span class="k" data-i18n="wind_height"></span><span class="v" id="v-zm"></span></div>
-      <div class="kv"><span class="k" data-i18n="data_span"></span><span class="v" id="v-years"></span></div>
-      <div class="kv"><span class="k" data-i18n="records"></span><span class="v" id="v-n"></span></div>
-      <div class="kv" style="margin-top:4px"><span class="k"></span><span class="v" id="v-sigv"></span></div>
+      <div class="kv" id="row-years"><span class="k" data-i18n="data_span"></span><span class="v" id="v-years"></span></div>
+      <div class="kv" id="row-records"><span class="k" data-i18n="records"></span><span class="v" id="v-n"></span></div>
+      <div class="kv" id="row-sigv" style="margin-top:4px"><span class="k"></span><span class="v" id="v-sigv"></span></div>
       <div class="gpp-annual" id="gpp-annual" style="display:none">
         <div class="gpp-annual-head" data-i18n="gpp"></div>
         <div class="kv" id="row-gpp-dt"><span class="k"><span class="gpp-dot dt"></span><span data-i18n="gpp_dt"></span></span><span class="v" id="v-gpp-dt"></span></div>
         <div class="kv" id="row-gpp-nt"><span class="k"><span class="gpp-dot nt"></span><span data-i18n="gpp_nt"></span></span><span class="v" id="v-gpp-nt"></span></div>
       </div>
+    </div>
+
+    <div class="card glass" id="status-card" style="display:none">
+      <h3 data-i18n="data_status"></h3>
+      <div class="status-line warn" id="status-fp"></div>
+      <div class="status-line" id="status-gpp"></div>
     </div>
 
     <div class="card glass" id="metric-card" style="display:none">

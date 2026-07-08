@@ -154,6 +154,17 @@ body.rp-collapsed #rp-toggle svg { transform: rotate(180deg); }
 .badge.measured { background: rgba(129,199,132,0.16); color: #a5d6a7; }
 .badge.param { background: rgba(255,183,77,0.16); color: #ffcc80; }
 
+/* 数据说明卡片（无足迹站点） */
+.status-line { font-size: 12.5px; line-height: 1.55; color: var(--text-dim); padding: 2px 0; }
+.status-line.warn { color: #ffcc80; }
+#status-card h3 { margin-bottom: 8px; }
+
+/* 站点列表：无足迹标记 */
+.si-nofp { color: var(--text-faint); }
+
+/* 无足迹站点：隐藏时间尺度切换（仅日 GPP 滚动） */
+body.no-fp #mode-tabs { display: none; }
+
 /* 指标大数字 */
 .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .metric { background: rgba(0,0,0,0.22); border-radius: 10px; padding: 10px 12px; }
